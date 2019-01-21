@@ -1,12 +1,16 @@
 package ca.mcgill.ecse211.wallfollowing;
 
+/**
+ * p-Controller code - GROUP 71
+ */
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 public class PController implements UltrasonicController {
 
   /* Constants */
-  private static final int MOTOR_SPEED = 200;
+  private static final int MOTOR_SPEED = 150; //forward speed
   private static final int FILTER_OUT = 20;
+  
 
   private final int bandCenter;
   private final int bandWidth;
@@ -18,30 +22,30 @@ public class PController implements UltrasonicController {
     this.bandWidth = bandwidth;
     this.filterControl = 0;
 
-    WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); // Initalize motor rolling forward
-    WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED);
+    WallFollowingLab.leftMotor.setSpeed(0); // Start robot not moving
+    WallFollowingLab.rightMotor.setSpeed(0);
     WallFollowingLab.leftMotor.forward();
     WallFollowingLab.rightMotor.forward();
   }
 
   @Override
   public void processUSData(int distance) {
-
+	 
     // rudimentary filter - toss out invalid samples corresponding to null
-    // signal.
-    // (n.b. this was not included in the Bang-bang controller, but easily
-    // could have).
-    //
-    if (distance >= 255 && filterControl < FILTER_OUT) {
+    // signal (adjusted according to our test data)
+    if (distance >= 100 && filterControl < FILTER_OUT) {
       // bad value, do not set the distance var, however do increment the
       // filter value
       filterControl++;
-    } else if (distance >= 255) {
+    } else if (distance >= 5000) {
+    	//ignore extremely high values (50m+ completely)
+    }
+    else if (distance >= 100) {
       // We have repeated large values, so there must actually be nothing
       // there: leave the distance alone
       this.distance = distance;
     } else {
-      // distance went below 255: reset filter and leave
+      // distance went below 100: reset filter and leave
       // distance alone.
       filterControl = 0;
       this.distance = distance;
@@ -49,21 +53,35 @@ public class PController implements UltrasonicController {
 
     // TODO: process a movement based on the us distance passed in (P style)
     //need differential to be proportional to distance
-    if (Math.abs(distance - bandCenter) < bandWidth) {
-    	WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED);
+    if (Math.abs(this.distance - bandCenter) < bandWidth) {
+    	WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED); //continue straight
     	WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED);
-    } else if (distance > bandCenter) {
-    	//need to move towards wall
-    	int p = distance - bandCenter; //need to scale down...
+    	WallFollowingLab.leftMotor.forward();
+    	WallFollowingLab.rightMotor.forward();
+    } else if (this.distance < bandCenter) {
+    	//need to move away from the wall
     	
-    	WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED / p);
-    	WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED);
+    	int p = (int) Math.min(10*Math.abs(this.distance - bandCenter), MOTOR_SPEED * 2); //p-constant for left-handed turns
+    	if (p > MOTOR_SPEED) {
+        	WallFollowingLab.leftMotor.setSpeed(p - MOTOR_SPEED);
+        	WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + p );
+        	WallFollowingLab.leftMotor.backward();
+        	WallFollowingLab.rightMotor.forward();
+    	} else {
+        	WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED - p);
+        	WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED + p );
+        	WallFollowingLab.leftMotor.forward();
+        	WallFollowingLab.rightMotor.forward();
+    	}
+
     } else {
-    	//need to move away from wall
-    	int p = distance - bandCenter; //need to scale down...
+    	//need to move toward from wall
+    	int p = (int) Math.min(3*Math.abs(this.distance - bandCenter), 0.35*MOTOR_SPEED); //p-constant for right-handed turns
     	
-    	WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED);
-    	WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED / p);
+    	WallFollowingLab.leftMotor.setSpeed(MOTOR_SPEED + p);
+    	WallFollowingLab.rightMotor.setSpeed(MOTOR_SPEED - p  );
+    	WallFollowingLab.leftMotor.forward();
+    	WallFollowingLab.rightMotor.forward();
     }
     
   }

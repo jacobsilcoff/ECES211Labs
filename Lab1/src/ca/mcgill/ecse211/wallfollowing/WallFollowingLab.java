@@ -1,4 +1,16 @@
 package ca.mcgill.ecse211.wallfollowing;
+/*
+ * Wall-Following Lab - GROUP 71 - Jacob Silcoff (260767897) and Helen Lin (260715521)
+ * 
+ * Parameters for band-center, bandwidth and turning (motor) speeds were adjusted for optimal performance.
+ * 
+ * Note that our bang-bang controller implements a constant forward speed different from the motorHigh
+ * turning speed here, and that it also implements a corner factor to make tighter (faster) turns for
+ * concave corners, and slower turns for convex (see bang-bang controller code)
+ * 
+ * Note that our p-controller implements an independent motorspeed indicated in its class
+ * 
+ */
 
 import lejos.hardware.sensor.*;
 import lejos.hardware.ev3.LocalEV3;
@@ -9,19 +21,19 @@ import lejos.hardware.Button;
 
 public class WallFollowingLab {
 
-  // Parameters: adjust these for desired performance
+  // Parameters: adjusted for desired performance
 
-  private static final int bandCenter = 35; // Offset from the sensor at 45deg (not wall anymore) (cm)
-  private static final int bandWidth = 4; // Width of dead band (cm)
-  private static final int motorLow = 30; // Speed of slower rotating wheel (deg/sec)
-  private static final int motorHigh = 60; // Speed of the faster rotating wheel (deg/sec)
+  private static final int bandCenter = 30; 	// Offset from the sensor to wall (note: sensor installed at 45deg) (cm)
+  private static final int bandWidth = 3; 		// Width of dead band (cm)
+  private static final int motorLow = 75; 		// Speed of slower rotating wheel (deg/sec)
+  private static final int motorHigh = 250; 	// Speed of the faster rotating wheel (deg/sec)
+  
 
-
-  private static final Port usPort = LocalEV3.get().getPort("S4");
+  private static final Port usPort = LocalEV3.get().getPort("S1");
   public static final EV3LargeRegulatedMotor leftMotor =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-  public static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  public static final EV3LargeRegulatedMotor rightMotor =
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 
   // Main entry point - instantiate objects used and set up sensor
 
