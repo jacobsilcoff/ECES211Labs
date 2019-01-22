@@ -20,7 +20,7 @@ import lejos.hardware.motor.*;
 public class BangBangController implements UltrasonicController{
  
   private static final int FORSPEED = 200; // Speed of robot in forward motion (when within error threshold) (deg/sec)
-  private static final float CORNER_FACTOR = 0.25f; //reduction factor of right-hand turning speed for convex corners, increase speed for concave corners
+  private static final float CORNER_FACTOR = 0.5f; //reduction factor of right-hand turning speed for convex corners, increase speed for concave corners
   
   private static final int FILTER_OUT = 25;
   private int filterControl;
