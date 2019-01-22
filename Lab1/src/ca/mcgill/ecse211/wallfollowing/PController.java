@@ -9,7 +9,7 @@ public class PController implements UltrasonicController {
 
   /* Constants */
   private static final int MOTOR_SPEED = 150; //forward speed
-  private static final int FILTER_OUT = 20;
+  private static final int FILTER_OUT = 7;
   
 
   private final int bandCenter;
@@ -33,14 +33,14 @@ public class PController implements UltrasonicController {
 	 
     // rudimentary filter - toss out invalid samples corresponding to null
     // signal (adjusted according to our test data)
-    if (distance >= 100 && filterControl < FILTER_OUT) {
+    if (distance >= 500 && filterControl < FILTER_OUT) {
       // bad value, do not set the distance var, however do increment the
       // filter value
       filterControl++;
-    } else if (distance >= 5000) {
+    } else if (distance >= 20000) {
     	//ignore extremely high values (50m+ completely)
     }
-    else if (distance >= 100) {
+    else if (distance >= 500) {
       // We have repeated large values, so there must actually be nothing
       // there: leave the distance alone
       this.distance = distance;

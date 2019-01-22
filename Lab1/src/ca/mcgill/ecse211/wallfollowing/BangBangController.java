@@ -20,9 +20,9 @@ import lejos.hardware.motor.*;
 public class BangBangController implements UltrasonicController{
  
   private static final int FORSPEED = 200; // Speed of robot in forward motion (when within error threshold) (deg/sec)
-  private static final float CORNER_FACTOR = 0.4f; //reduction factor of right-hand turning speed for convex corners, increase speed for concave corners
+  private static final float CORNER_FACTOR = 0.25f; //reduction factor of right-hand turning speed for convex corners, increase speed for concave corners
   
-  private static final int FILTER_OUT = 10;
+  private static final int FILTER_OUT = 25;
   private int filterControl;
   
   private final int bandCenter;
@@ -54,7 +54,7 @@ public class BangBangController implements UltrasonicController{
 	      // bad value, do not set the distance var, however do increment the
 	      // filter value
 	      filterControl++;
-	    } else if (distance >= 5000) {
+	    } else if (distance >= 20000) {
 	    	//ignore these completely because 200m readings are inaccurate
 	    } else if (distance >= 1000) {
 	      // We have repeated large values, so there must actually be nothing
