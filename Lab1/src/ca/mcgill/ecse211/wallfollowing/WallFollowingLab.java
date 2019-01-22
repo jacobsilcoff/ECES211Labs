@@ -24,8 +24,8 @@ public class WallFollowingLab {
   // Parameters: adjusted for desired performance
 
   private static final int bandCenter = 30; 	// Offset from the sensor to wall (note: sensor installed at 45deg) (cm)
-  private static final int bandWidth = 3; 		// Width of dead band (cm)
-  private static final int motorLow = 75; 		// Speed of slower rotating wheel (deg/sec)
+  private static final int bandWidth = 2; 		// Width of dead band (cm)
+  private static final int motorLow = 80; 		// Speed of slower rotating wheel (deg/sec)
   private static final int motorHigh = 250; 	// Speed of the faster rotating wheel (deg/sec)
   
 
