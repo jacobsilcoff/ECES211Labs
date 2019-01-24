@@ -23,8 +23,11 @@ public class Odometer extends OdometerData implements Runnable {
   private EV3LargeRegulatedMotor leftMotor;
   private EV3LargeRegulatedMotor rightMotor;
 
+  //why is it called track what a bad variable name...
   private final double TRACK;
   private final double WHEEL_RAD;
+  //Multiply by degrees to get distance moved by a single wheel
+  private final double DIST_MULT;
 
   private double[] position;
 
@@ -54,6 +57,7 @@ public class Odometer extends OdometerData implements Runnable {
 
     this.TRACK = TRACK;
     this.WHEEL_RAD = WHEEL_RAD;
+    this.DIST_MULT = (Math.PI * WHEEL_RAD / 180);
 
   }
 
@@ -101,14 +105,32 @@ public class Odometer extends OdometerData implements Runnable {
 
     while (true) {
       updateStart = System.currentTimeMillis();
-
-      leftMotorTachoCount = leftMotor.getTachoCount();
-      rightMotorTachoCount = rightMotor.getTachoCount();
-
+      
+      //Measure differences then update
+      int leftDiff = leftMotor.getTachoCount() - leftMotorTachoCount;
+      int rightDiff = rightMotor.getTachoCount() - rightMotorTachoCount;
+      
+      leftMotorTachoCount += leftDiff;
+      rightMotorTachoCount += rightDiff;
+      
+      
+      
       // TODO Calculate new robot position based on tachometer counts
       
+      double leftDist = leftDiff * DIST_MULT;
+      double rightDist = rightDiff * DIST_MULT;
+      double disp = 0.5*(leftDist + rightDist); //displacement in the forward direction
+      double dx, dy, dt;
+      //No asin needed b/c small angle
+      //negative to reflect distance CW from Y axis
+      dt = Math.toDegrees(-(rightDist-leftDist)/TRACK); 
+      //idk if adding full weight of dt is wise... maybe half of it? shouldnt matter much
+      dx = disp * Math.sin(getXYT()[2] + dt);
+      dy = disp * Math.cos(getXYT()[2] + dt);
+      
+      
       // TODO Update odometer values with new calculated values
-      odo.update(0.5, 1.8, 20.1);
+      odo.update(dx, dy, dt);
 
       // this ensures that the odometer only runs once every period
       updateEnd = System.currentTimeMillis();
