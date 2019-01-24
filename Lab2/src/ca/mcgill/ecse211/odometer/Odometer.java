@@ -32,7 +32,7 @@ public class Odometer extends OdometerData implements Runnable {
   private double[] position;
 
 
-  private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
+  private static final long ODOMETER_PERIOD = 25; // 40Hz, odometer update period in ms
 
   /**
    * This is the default constructor of this class. It initiates all motors and variables once.It
@@ -117,16 +117,18 @@ public class Odometer extends OdometerData implements Runnable {
       
       // TODO Calculate new robot position based on tachometer counts
       
-      double leftDist = leftDiff * DIST_MULT;
-      double rightDist = rightDiff * DIST_MULT;
-      double disp = 0.5*(leftDist + rightDist); //displacement in the forward direction
-      double dx, dy, dt;
-      //No asin needed b/c small angle
-      //negative to reflect distance CW from Y axis
-      dt = Math.toDegrees(-(rightDist-leftDist)/TRACK); 
+      double leftDist = leftDiff * DIST_MULT; //left wheel distance traveled
+      double rightDist = rightDiff * DIST_MULT; //right wheel distance traveled
+      double disp = 0.5*(leftDist + rightDist); //vehicle displacement in the forward direction (average)
+     
+      double dx, dy, dt; //displacement components in the x, y, and theta direction (heading
+      
+    
+      dt = Math.toDegrees((leftDist-rightDist)/TRACK); //No arcsin needed b/c small angle
+      
       //idk if adding full weight of dt is wise... maybe half of it? shouldnt matter much
-      dx = disp * Math.sin(getXYT()[2] + dt);
-      dy = disp * Math.cos(getXYT()[2] + dt);
+      dx = disp * Math.sin(Math.toRadians(odo.getXYT()[2] + dt));
+      dy = disp * Math.cos(Math.toRadians(odo.getXYT()[2] + dt));
       
       
       // TODO Update odometer values with new calculated values
