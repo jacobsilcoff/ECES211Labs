@@ -6,6 +6,11 @@ import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.port.Port;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.EV3UltrasonicSensor;
+import lejos.hardware.sensor.SensorModes;
+import lejos.robotics.SampleProvider;
 
 public class Lab2 {
 
@@ -14,9 +19,10 @@ public class Lab2 {
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
   private static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-  private static final TextLCD lcd = LocalEV3.get().getTextLCD();
-  public static final double WHEEL_RAD = 2.1975; 	//wheel radius (digital caliper,cm)
-  public static final double TRACK = 16.0; //wheel-base between wheel-centers (digital caliper, cm)
+  private static final Port lightSensorPort = LocalEV3.get().getPort("S1");
+  public static final TextLCD lcd = LocalEV3.get().getTextLCD();
+  public static final double WHEEL_RAD = 2.161; 	//wheel radius (digital caliper,cm)
+  public static final double TRACK = 14.8; //wheel-base between wheel-centers (digital caliper, cm)
   
 
   public static void main(String[] args) throws OdometerExceptions {
@@ -24,9 +30,16 @@ public class Lab2 {
     int buttonChoice;
 
     // Odometer related objects
-    Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD); // TODO Complete implementation
-    OdometryCorrection odometryCorrection = new OdometryCorrection(); // TODO Complete
+    Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD); 
+    
+    
+    SensorModes lightSensorMode = new EV3ColorSensor(lightSensorPort); // usSensor is the instance
+    SampleProvider lightSensor = lightSensorMode.getMode("Red");
+    // TODO Complete implementation
+    OdometryCorrection odometryCorrection = new OdometryCorrection(lightSensor); // TODO Complete
                                                                       // implementation
+    
+    
     Display odometryDisplay = new Display(lcd); // No need to change
 
 
@@ -61,6 +74,9 @@ public class Lab2 {
     } else {
       // clear the display
       lcd.clear();
+      //REMOVE THIS !!
+      Thread odoCorrectionThread1 = new Thread(odometryCorrection);
+      odoCorrectionThread1.start();
 
       // ask the user whether odometery correction should be run or not
       lcd.drawString("< Left | Right >", 0, 0);
