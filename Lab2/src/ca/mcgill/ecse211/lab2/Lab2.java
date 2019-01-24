@@ -11,11 +11,11 @@ public class Lab2 {
 
   // Motor Objects, and Robot related parameters
   private static final EV3LargeRegulatedMotor leftMotor =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
   private static final EV3LargeRegulatedMotor rightMotor =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
   private static final TextLCD lcd = LocalEV3.get().getTextLCD();
-  public static final double WHEEL_RAD = 2.3;//originally 2.2
+  public static final double WHEEL_RAD = 2.08; 	//wheel radius (cm)
   public static final double TRACK = 7.55;//was set to 17 originally??
   
 
