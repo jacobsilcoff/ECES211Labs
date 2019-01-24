@@ -10,7 +10,7 @@ public class OdometryCorrection implements Runnable {
   private enum CorrectionType{HEADING, DISTANCE}
   
   private static final CorrectionType CORRECTION = CorrectionType.DISTANCE;
-  private static final float LIGHT_THRESHOLD = 0.45f;
+  private static final float LIGHT_THRESHOLD = 0.49f;
   private static final int T_THRESHOLD = 15;
   private static final float LINE_SPACING = 30.48f;
   private static final long CORRECTION_PERIOD = 10;
@@ -43,15 +43,17 @@ public class OdometryCorrection implements Runnable {
    */
   // run method (required for Thread)
   public void run() {
+	int lineCount = 0;
     long correctionStart, correctionEnd;
 
     while (true) {
       correctionStart = System.currentTimeMillis();
 
       // TODO Trigger correction (When do I have information to correct?)
-
+      //TODO: FILTER LIGHT SENSOR!!! MAKE SURE YOU"VE moved firest
       lightSensor.fetchSample(sample, 0);
       if (sample[0] < LIGHT_THRESHOLD) {
+    	  lineCount++;
     	  // TODO Calculate new (accurate) robot position
     	  if (lastPos == null) {
     		  lastPos = odometer.getXYT();
@@ -100,11 +102,13 @@ public class OdometryCorrection implements Runnable {
     	  }
       }
       //If we've turned dramatically, this wont be useful, so nullify last data
-      if (lastPos != null && Math.abs(odometer.getXYT()[2] - lastPos[2]) > T_THRESHOLD) {
-    	  lastPos = null;
-      }
+      try {
+    	  if (lastPos != null && Math.abs(odometer.getXYT()[2] - lastPos[2]) > T_THRESHOLD) {
+    		  lastPos = null;
+    	  }
+      } catch (NullPointerException npe) {}
      
-      Lab2.lcd.drawString("LIGHT VAL: " + sample[0], 0, 5);
+      Lab2.lcd.drawString(lineCount + " line(s) detected", 0, 5);
 
 
       // this ensure the odometry correction occurs only once every period

@@ -74,9 +74,7 @@ public class Lab2 {
     } else {
       // clear the display
       lcd.clear();
-      //REMOVE THIS !!
-      Thread odoCorrectionThread1 = new Thread(odometryCorrection);
-      odoCorrectionThread1.start();
+      
 
       // ask the user whether odometery correction should be run or not
       lcd.drawString("< Left | Right >", 0, 0);
