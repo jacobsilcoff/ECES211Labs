@@ -100,7 +100,7 @@ public class OdometryCorrection implements Runnable {
     	  }
       }
       //If we've turned dramatically, this wont be useful, so nullify last data
-      if (lastPos != null && Math.abs(odometer.getXYT()[3] - lastPos[3]) > T_THRESHOLD) {
+      if (lastPos != null && Math.abs(odometer.getXYT()[2] - lastPos[2]) > T_THRESHOLD) {
     	  lastPos = null;
       }
      
