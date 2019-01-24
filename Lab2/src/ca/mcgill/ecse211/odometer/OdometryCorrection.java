@@ -7,10 +7,15 @@ import ca.mcgill.ecse211.lab2.Lab2;
 import lejos.robotics.SampleProvider;
 
 public class OdometryCorrection implements Runnable {
+  private enum CorrectionType{HEADING, DISTANCE}
+  
+  private static final CorrectionType CORRECTION = CorrectionType.DISTANCE;
   private static final float LIGHT_THRESHOLD = 0.45f;
   private static final int T_THRESHOLD = 15;
   private static final float LINE_SPACING = 30.48f;
   private static final long CORRECTION_PERIOD = 10;
+  
+  
   private Odometer odometer;
   private SampleProvider lightSensor;
   private float[] sample;
@@ -54,8 +59,44 @@ public class OdometryCorrection implements Runnable {
     		  //we have now reached a second line, ideally perpendicular to our trajectory!
 
               // TODO Update odometer with new calculated (and more accurate) values
-              //Reasonably, can either correct angle or distance, but not necessarily both
-    		  
+    		  double[] pos = odometer.getXYT();
+    		  if (CORRECTION == CorrectionType.HEADING) {
+    			  //Here, we assume that the distance readings are accurate, and 
+    			  //update the heading to match the read distance.
+    			  
+    			  // The issue is that although we can find an error, we don't know the sign
+    			  //Haven't figured out a solution, but it's still cool to be able to 
+    			  //Find the error in angle
+    			  
+    			  double predictedDistance = 
+    					  Math.sqrt(Math.pow(lastPos[0] - pos[0], 2) +
+    							  	Math.pow(lastPos[1] - pos[1], 2));
+    			  //this should be true! If it isn't true, there is necessarily an error
+    			  //in the distance reading, or we crossed a non-perpendicular line.
+    			  if (predictedDistance > LINE_SPACING) {
+    				  double tError = Math.toDegrees(Math.acos(predictedDistance/LINE_SPACING));
+    				  //if we have some way of knowing the tendancy of the robot, we can choose to
+    				  //add or subtract this error, but that will take testing, and will be imperfect.
+    			  } else {
+    				  //?????
+    			  }
+    			  
+    			  
+    		  } 
+    		  else if (CORRECTION == CorrectionType.DISTANCE) {
+    			  //Here, we assume the angle reading was sufficient, and scale distance
+    			  
+    			  //these multipliers should be elements of {-1,1,0}
+    			  int sin = (int) (Math.sin(pos[2]) + 0.5);
+    			  int cos = (int) (Math.cos(pos[2]) + 0.5);
+    			  if (sin == 0) {
+    				  //y motion
+    				  odometer.setXYT(pos[0], lastPos[1] + sin * LINE_SPACING, pos[2]);
+    			  } else {
+    				  //x change
+    				  odometer.setXYT(lastPos[1] + cos * LINE_SPACING, pos[1], pos[2]);
+    			  }
+    		  }
     	  }
       }
       //If we've turned dramatically, this wont be useful, so nullify last data
