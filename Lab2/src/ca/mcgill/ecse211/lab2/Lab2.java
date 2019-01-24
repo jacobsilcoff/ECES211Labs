@@ -15,8 +15,8 @@ public class Lab2 {
   private static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
   private static final TextLCD lcd = LocalEV3.get().getTextLCD();
-  public static final double WHEEL_RAD = 2.08; 	//wheel radius (cm)
-  public static final double TRACK = 7.55;//was set to 17 originally??
+  public static final double WHEEL_RAD = 2.1975; 	//wheel radius (digital caliper,cm)
+  public static final double TRACK = 14.991; //wheel-base between wheel-centers (digital caliper, cm)
   
 
   public static void main(String[] args) throws OdometerExceptions {
