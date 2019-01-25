@@ -8,7 +8,7 @@ import lejos.robotics.SampleProvider;
 
 public class OdometryCorrection implements Runnable {
   private enum CorrectionType{HEADING, DISTANCE}
-  
+  private static final float DIST_THRESHOLD = 5;
   private static final CorrectionType CORRECTION = CorrectionType.DISTANCE;
   private static final float LIGHT_THRESHOLD = 0.49f;
   private static final int T_THRESHOLD = 15;
@@ -52,7 +52,8 @@ public class OdometryCorrection implements Runnable {
       // TODO Trigger correction (When do I have information to correct?)
       //TODO: FILTER LIGHT SENSOR!!! MAKE SURE YOU"VE moved firest
       lightSensor.fetchSample(sample, 0);
-      if (sample[0] < LIGHT_THRESHOLD) {
+      if (sample[0] < LIGHT_THRESHOLD && 
+    		  (lastPos == null || dist(lastPos, odometer.getXYT()) > DIST_THRESHOLD)) {
     	  lineCount++;
     	  // TODO Calculate new (accurate) robot position
     	  if (lastPos == null) {
@@ -121,5 +122,11 @@ public class OdometryCorrection implements Runnable {
         }
       }
     }
+  }
+  private static double dist(double[] a, double[] b) {
+	  if (a.length < 2 || b.length < 2) {
+		  return -1;
+	  }
+	  return Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1], b[1]));
   }
 }
