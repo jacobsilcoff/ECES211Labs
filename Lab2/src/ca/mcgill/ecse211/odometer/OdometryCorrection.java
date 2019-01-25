@@ -52,6 +52,9 @@ public class OdometryCorrection implements Runnable {
       // TODO Trigger correction (When do I have information to correct?)
       //TODO: FILTER LIGHT SENSOR!!! MAKE SURE YOU"VE moved firest
       lightSensor.fetchSample(sample, 0);
+      //To avoid a single line triggering this many times, verify that either
+      //we haven't seen a line yet at all (lastPos == null) or we're sufficiently
+      //far from the last line.
       if (sample[0] < LIGHT_THRESHOLD && 
     		  (lastPos == null || dist(lastPos, odometer.getXYT()) > DIST_THRESHOLD)) {
     	  lineCount++;
