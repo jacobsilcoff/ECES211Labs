@@ -32,7 +32,7 @@ public class Odometer extends OdometerData implements Runnable {
   private double[] position;
 
 
-  private static final long ODOMETER_PERIOD = 25; // 40Hz, odometer update period in ms
+  private static final long ODOMETER_PERIOD = 25; // odometer update period in ms, equiv to 40Hz
 
   /**
    * This is the default constructor of this class. It initiates all motors and variables once.It

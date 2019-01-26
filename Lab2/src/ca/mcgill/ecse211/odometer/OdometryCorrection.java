@@ -103,9 +103,10 @@ public class OdometryCorrection implements Runnable {
     		  else if (CORRECTION == CorrectionType.DISTANCE) {
     			  //Here, we assume the angle reading was sufficient, and scale distance
     			  //System.out.println("correcting");
+    			  
     			  //these multipliers should be elements of {-1,1,0}
-    			  int sin = (int) (Math.sin(pos[2]) + 0.5);
-    			  int cos = (int) (Math.cos(pos[2]) + 0.5);
+    			  int sin = (int) (Math.sin(Math.toRadians(pos[2]) + 0.5));
+    			  int cos = (int) (Math.cos(Math.toRadians(pos[2]) + 0.5));
     			  if (sin == 0) {
     				  //y motion
     				  odometer.setXYT(pos[0], lastPos[1] + sin * LINE_SPACING, pos[2]);
