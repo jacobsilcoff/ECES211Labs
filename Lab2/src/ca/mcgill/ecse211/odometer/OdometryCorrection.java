@@ -21,6 +21,8 @@ public class OdometryCorrection implements Runnable {
   private float[] sample;
   
   private double[] lastPos;
+  
+  
   /**
    * This is the default class constructor. An existing instance of the odometer is used. This is to
    * ensure thread safety.
@@ -50,14 +52,19 @@ public class OdometryCorrection implements Runnable {
       correctionStart = System.currentTimeMillis();
 
       // TODO Trigger correction (When do I have information to correct?)
-      //TODO: FILTER LIGHT SENSOR!!! MAKE SURE YOU"VE moved firest
+      
+      //TODO: FILTER LIGHT SENSOR!!! MAKE SURE YOU"VE moved first
+      
+      
       lightSensor.fetchSample(sample, 0);
+     
       //To avoid a single line triggering this many times, verify that either
       //we haven't seen a line yet at all (lastPos == null) or we're sufficiently
       //far from the last line.
       if (sample[0] < LIGHT_THRESHOLD && 
     		  (lastPos == null || dist(lastPos, odometer.getXYT()) > DIST_THRESHOLD)) {
     	  lineCount++;
+    	 
     	  // TODO Calculate new (accurate) robot position
     	  if (lastPos == null) {
     		  lastPos = odometer.getXYT();
@@ -66,6 +73,8 @@ public class OdometryCorrection implements Runnable {
 
               // TODO Update odometer with new calculated (and more accurate) values
     		  double[] pos = odometer.getXYT();
+    		 
+    		  //heading correction
     		  if (CORRECTION == CorrectionType.HEADING) {
     			  //Here, we assume that the distance readings are accurate, and 
     			  //update the heading to match the read distance.
@@ -89,6 +98,8 @@ public class OdometryCorrection implements Runnable {
     			  
     			  
     		  } 
+    		  
+    		  //distance correction
     		  else if (CORRECTION == CorrectionType.DISTANCE) {
     			  //Here, we assume the angle reading was sufficient, and scale distance
     			  
@@ -126,10 +137,12 @@ public class OdometryCorrection implements Runnable {
       }
     }
   }
+  
+  //calculates if current distance is within distance error threshold
   private static double dist(double[] a, double[] b) {
 	  if (a.length < 2 || b.length < 2) {
 		  return -1;
 	  }
-	  return Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1], b[1]));
+	  return Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1]-b[1],2)); //fixed distance formula
   }
 }
