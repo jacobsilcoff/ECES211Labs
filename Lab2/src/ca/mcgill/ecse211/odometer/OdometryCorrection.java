@@ -10,7 +10,7 @@ public class OdometryCorrection implements Runnable {
   private enum CorrectionType{HEADING, DISTANCE}
   private static final float DIST_THRESHOLD = 5;
   private static final CorrectionType CORRECTION = CorrectionType.DISTANCE;
-  private static final float LIGHT_THRESHOLD = 0.49f;
+  private static final float LIGHT_THRESHOLD = 0.28f; //lowered light threshold 
   private static final int T_THRESHOLD = 15;
   private static final float LINE_SPACING = 30.48f;
   private static final long CORRECTION_PERIOD = 10;
@@ -102,7 +102,7 @@ public class OdometryCorrection implements Runnable {
     		  //distance correction
     		  else if (CORRECTION == CorrectionType.DISTANCE) {
     			  //Here, we assume the angle reading was sufficient, and scale distance
-    			  
+    			  //System.out.println("correcting");
     			  //these multipliers should be elements of {-1,1,0}
     			  int sin = (int) (Math.sin(pos[2]) + 0.5);
     			  int cos = (int) (Math.cos(pos[2]) + 0.5);
@@ -112,6 +112,7 @@ public class OdometryCorrection implements Runnable {
     			  } else {
     				  //x change
     				  odometer.setXYT(lastPos[1] + cos * LINE_SPACING, pos[1], pos[2]);
+    				 // System.out.println("corrected");
     			  }
     		  }
     	  }
