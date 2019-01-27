@@ -1,5 +1,9 @@
 /*
  * OdometryCorrection.java
+ * (0,0) is the leftmost gridline intersection. This means in the correction, robot will start at approx (-15,-15)
+ * and the correction will compensate for this. 
+ * Final displayed XYT should be with respect to the gridlines, unlike in uncorrected odometer, where start
+ * and final positions should be (0,0)
  */
 package ca.mcgill.ecse211.odometer;
 
@@ -12,10 +16,13 @@ public class OdometryCorrection implements Runnable {
   
   private static final CorrectionType CORRECTION = CorrectionType.DISTANCE;
  
-  private static final float LIGHT_THRESHOLD = 0.28f; //lowered light threshold (detects black lines)
+  private static final float LIGHT_THRESHOLD = 0.33f; //light threshold (detects black lines)
   private static final int T_THRESHOLD = 10; //theta threshold (degrees)
   private static final float LINE_SPACING = 30.48f;
   private static final long CORRECTION_PERIOD = 10;
+ 
+  private static double OFFSET_X = 15.24; //ideal starting x-offset
+  private static double OFFSET_Y = 15.24; //ideal starting y-offset
   
   
   private Odometer odometer;
@@ -48,6 +55,7 @@ public class OdometryCorrection implements Runnable {
 	int lineCount = 0;
     long correctionStart, correctionEnd;
 
+    
     while (true) {
       correctionStart = System.currentTimeMillis();
 
@@ -181,6 +189,17 @@ public class OdometryCorrection implements Runnable {
 	  return Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1]-b[1],2)); //fixed distance formula
   }
   
- 
+  
+  //do we need to do this:
+  //converts the XYT values to the gridline coordinate system  
+  private double[] convertCoord(double[] pos){
+	  double[] coord = pos;
+	  
+	  //change X
+	  coord[0] = coord[0] - OFFSET_X; //change X wrt (0,0)
+	  coord[1] = coord[1] - OFFSET_Y; //change Y wrt (0,0)
+	  coord[2] = 270 - Math.asin(coord[1]/coord[0]); //change theta wrt (0,0)
+	  return coord;
+  }
    
 }

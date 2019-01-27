@@ -48,9 +48,16 @@ public class Odometer extends OdometerData implements Runnable {
                                               // manipulation methods
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
+    //reset tacho count in motor
+    this.leftMotor.resetTachoCount();
+    this.rightMotor.resetTachoCount();
 
     // Reset the values of x, y and z to 0
     odoData.setXYT(0, 0, 0);
+    
+    //reset tacho count in motor
+    this.leftMotor.resetTachoCount();
+    this.rightMotor.resetTachoCount();
 
     this.leftMotorTachoCount = 0;
     this.rightMotorTachoCount = 0;
@@ -112,7 +119,6 @@ public class Odometer extends OdometerData implements Runnable {
       
       leftMotorTachoCount += leftDiff;
       rightMotorTachoCount += rightDiff;
-      
       
       
       // TODO Calculate new robot position based on tachometer counts
