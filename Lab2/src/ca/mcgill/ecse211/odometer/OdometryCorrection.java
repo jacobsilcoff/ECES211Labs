@@ -16,14 +16,11 @@ public class OdometryCorrection implements Runnable {
   
   private static final CorrectionType CORRECTION = CorrectionType.DISTANCE;
  
-  private static final float LIGHT_THRESHOLD = 0.33f; //light threshold (detects black lines)
+  private static final float LIGHT_THRESHOLD = 0.30f; //light threshold (detects black lines)
   private static final int T_THRESHOLD = 10; //theta threshold (degrees)
   private static final float LINE_SPACING = 30.48f;
   private static final long CORRECTION_PERIOD = 10;
  
-  private static double OFFSET_X = 15.24; //ideal starting x-offset
-  private static double OFFSET_Y = 15.24; //ideal starting y-offset
-  
   
   private Odometer odometer;
   private SampleProvider lightSensor;
@@ -75,15 +72,23 @@ public class OdometryCorrection implements Runnable {
     	  lineCount++; //line detected
     	  Lab2.lcd.drawString(lineCount + " line(s) detected.", 0, 5);
     	  
-    	  // TODO Calculate new (accurate) robot position
+    	  
     	  if (lastPos == null) { //first line
     		  lastPos = odometer.getXYT();
+       		  Lab2.OFFSET_Y = lastPos[1]; //get starting Y-offset
+       		  //reset y at first line
+       		  lastPos[1] = 0;
+       		  odometer.setY(0);
     	  } else {
+    		  
+    		  // TODO Calculate new (accurate) robot position
     		  //we have now reached a second line, ideally perpendicular to our trajectory!
 
               // TODO Update odometer with new calculated (and more accurate) values
     		  double[] pos = odometer.getXYT(); //current odo-position
     		 
+    		  
+			  
     		  //heading correction
     		  if (CORRECTION == CorrectionType.HEADING) {
     			  //Here, we assume that the distance readings are accurate, and 
@@ -113,25 +118,30 @@ public class OdometryCorrection implements Runnable {
     		  
     		  //distance correction (note: cannot correct the first line going in any direction because starts from centre
     		  if (CORRECTION == CorrectionType.DISTANCE) {
-    			  
+    			  //if first right line, need X-offset and to reset X
+    			  if (Lab2.OFFSET_X == 0 && Math.abs(pos[2]-90)<T_THRESHOLD) { //if first right line
+    				  Lab2.OFFSET_X = pos[0]; //get accurate x-offset
+    				  pos[0] = 0;
+    				  odometer.setX(0);
+    			  }
+    			      			  
     			  //1) upward (+Y) path: theta=0, y>x
-    			 if ((pos[2]<T_THRESHOLD || (360-pos[2]<T_THRESHOLD) )&& pos[1]>pos[0]){  //theta approximately 0deg	 
+    			 if (pos[2]<T_THRESHOLD || (360-pos[2]<T_THRESHOLD)){  //theta approximately 0deg	 
     				  odometer.setY(lastPos[1]+LINE_SPACING); //correct Y-value
     				  Lab2.lcd.drawString("CORRECTED UP.", 0, 6); //display check	
     			  }
     			  //2) rightward (+X) path: theta=90, y>x
-    			  else if (Math.abs(pos[2]-90)<T_THRESHOLD && (pos[1]>pos[0]) && (pos[0]-lastPos[0]>LINE_SPACING-DIST_THRESHOLD)){ 
+    			  else if (Math.abs(pos[2]-90)<T_THRESHOLD && (pos[0]-lastPos[0]>LINE_SPACING-DIST_THRESHOLD)){ 
     				  odometer.setX(lastPos[0]+LINE_SPACING); //correct X-value
     				  Lab2.lcd.drawString("CORRECTED RIGHT.", 0, 6); //display check
-    				 
     			  }
     			 //3) downward (-Y) path: theta = 180, x>y
-    			  else if (Math.abs(pos[2]-180)<T_THRESHOLD && pos[0]>pos[1] && (lastPos[1]-pos[1]>LINE_SPACING-DIST_THRESHOLD)){  
+    			  else if (Math.abs(pos[2]-180)<T_THRESHOLD && (lastPos[1]-pos[1]>LINE_SPACING-DIST_THRESHOLD)){  
     				  odometer.setY(lastPos[1]-LINE_SPACING); //correct Y-value
     				  Lab2.lcd.drawString("CORRECTED DOWN.", 0, 6); //display check
     			 }
     			  //4)leftward path theta = 270, x>y
-    			  else if (Math.abs(pos[2]-270)<T_THRESHOLD && pos[0]>pos[1] && (lastPos[0]-pos[0]>LINE_SPACING-DIST_THRESHOLD)){
+    			  else if (Math.abs(pos[2]-270)<T_THRESHOLD && (lastPos[0]-pos[0]>LINE_SPACING-DIST_THRESHOLD)){
      				 	  odometer.setX(lastPos[0]-LINE_SPACING); //correct Y-value
       					  Lab2.lcd.drawString("CORRECTED LEFT.", 0, 6); //display check
        			 }
@@ -190,16 +200,5 @@ public class OdometryCorrection implements Runnable {
   }
   
   
-  //do we need to do this:
-  //converts the XYT values to the gridline coordinate system  
-  private double[] convertCoord(double[] pos){
-	  double[] coord = pos;
-	  
-	  //change X
-	  coord[0] = coord[0] - OFFSET_X; //change X wrt (0,0)
-	  coord[1] = coord[1] - OFFSET_Y; //change Y wrt (0,0)
-	  coord[2] = 270 - Math.asin(coord[1]/coord[0]); //change theta wrt (0,0)
-	  return coord;
-  }
-   
+    
 }
