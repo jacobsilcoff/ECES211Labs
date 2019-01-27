@@ -21,8 +21,10 @@ public class Lab2 {
   private static final Port lightSensorPort = LocalEV3.get().getPort("S1");
   public static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static final double WHEEL_RAD = 2.145; 	//wheel radius (cm)
-  public static final double TRACK = 14.85; 		//wheel-base (cm)
+  public static final double TRACK = 14.7; 		//wheel-base (cm)
   
+  public static double OFFSET_X = 0; //ideal starting x-offset, used for correction only
+  public static double OFFSET_Y = 0; //ideal starting y-offset, used for correction only
 
   public static void main(String[] args) throws OdometerExceptions {
 
