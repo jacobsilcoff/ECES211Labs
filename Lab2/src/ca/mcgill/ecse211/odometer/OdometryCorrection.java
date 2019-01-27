@@ -109,23 +109,23 @@ public class OdometryCorrection implements Runnable {
     			  //1) upward (+Y) path: theta=0, y>x
     			 if ((pos[2]<T_THRESHOLD || (360-pos[2]<T_THRESHOLD) )&& pos[1]>pos[0]){  //theta approximately 0deg	 
     				  odometer.setY(lastPos[1]+LINE_SPACING); //correct Y-value
-    				  Lab2.lcd.drawString(lineCount + " line(s) detected.\nMoved UP.", 0, 5); //display check	
+    				  Lab2.lcd.drawString("CORRECTED UP.", 0, 6); //display check	
     			  }
     			  //2) rightward (+X) path: theta=90, y>x
     			  else if (Math.abs(pos[2]-90)<T_THRESHOLD && (pos[1]>pos[0]) && (pos[0]-lastPos[0]>LINE_SPACING-DIST_THRESHOLD)){ 
     				  odometer.setX(lastPos[0]+LINE_SPACING); //correct X-value
-    				  Lab2.lcd.drawString(lineCount + " line(s) detected.\nMoved RIGHT.", 0, 5); //display check
+    				  Lab2.lcd.drawString("CORRECTED RIGHT.", 0, 6); //display check
     				 
     			  }
     			 //3) downward (-Y) path: theta = 180, x>y
     			  else if (Math.abs(pos[2]-180)<T_THRESHOLD && pos[0]>pos[1] && (lastPos[1]-pos[1]>LINE_SPACING-DIST_THRESHOLD)){  
     				  odometer.setY(lastPos[1]-LINE_SPACING); //correct Y-value
-    				  Lab2.lcd.drawString(lineCount + " line(s) detected.\nMoved DOWN.", 0, 5); //display check
+    				  Lab2.lcd.drawString("CORRECTED DOWN.", 0, 6); //display check
     			 }
     			  //4)leftward path theta = 270, x>y
     			  else if (Math.abs(pos[2]-270)<T_THRESHOLD && pos[0]>pos[1] && (lastPos[0]-pos[0]>LINE_SPACING-DIST_THRESHOLD)){
      				 	  odometer.setX(lastPos[0]-LINE_SPACING); //correct Y-value
-      					  Lab2.lcd.drawString(lineCount + " line(s) detected.\nMoved LEFT.", 0, 5); //display check
+      					  Lab2.lcd.drawString("CORRECTED LEFT.", 0, 6); //display check
        			 }
     			  
     			  //finished correcting odometer, set currrent position as lastPos
