@@ -118,11 +118,20 @@ public class OdometryCorrection implements Runnable {
     		  
     		  //distance correction (note: cannot correct the first line going in any direction because starts from centre
     		  if (CORRECTION == CorrectionType.DISTANCE) {
-    			  //if first right line, need X-offset and to reset X
-    			  if (Lab2.OFFSET_X == 0 && Math.abs(pos[2]-90)<T_THRESHOLD) { //if first right line
-    				  Lab2.OFFSET_X = pos[0]; //get accurate x-offset
-    				  pos[0] = 0;
-    				  odometer.setX(0);
+    			  
+    			  
+    			  if ((pos[0]-lastPos[0]<LINE_SPACING-DIST_THRESHOLD)) { //this is supposed to record offset at each turn
+    				 
+    				  if (Lab2.OFFSET_X == 0) { //if first right line
+    					Lab2.OFFSET_X = pos[0];
+    					pos[0] = 0;
+    					odometer.setX(0);
+    				 }else
+    					 Lab2.OFFSET_X = pos[0]; //get accurate x-offset
+    			  }
+    			  if ((pos[1]-lastPos[1]<LINE_SPACING-DIST_THRESHOLD)) { //if first right line
+    				  Lab2.OFFSET_Y = pos[1]; //get accurate x-offset
+    				  
     			  }
     			      			  
     			  //1) upward (+Y) path: theta=0, y>x
