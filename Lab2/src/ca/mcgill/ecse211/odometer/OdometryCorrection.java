@@ -11,23 +11,26 @@ import ca.mcgill.ecse211.lab2.Lab2;
 import lejos.robotics.SampleProvider;
 
 public class OdometryCorrection implements Runnable {
-  private enum CorrectionType{HEADING, DISTANCE}
-  private static final float DIST_THRESHOLD = 5; //cm
-  
-  private static final CorrectionType CORRECTION = CorrectionType.DISTANCE;
  
-  private static final float LIGHT_THRESHOLD = 0.30f; //light threshold (detects black lines)
-  private static final int T_THRESHOLD = 10; //theta threshold (degrees)
+  private static final float LIGHT_THRESHOLD = 0.03f; //light threshold for sig difference
   private static final float LINE_SPACING = 30.48f;
-  private static final long CORRECTION_PERIOD = 10;
- 
+  private static final float DIST_THRESHOLD = 3;
+  private static final long CORRECTION_PERIOD = 7;//from 10 to 7
+  private static final double SENSOR_Y = 1.5; //distance btwn sensor and wheel axis in Y dir
+
   
   private Odometer odometer;
   private SampleProvider lightSensor;
+  
+  private int x;
+  private int y;
+  
   private float[] sample; //store light sensor sample
   
+  private CircularArray samples;
+
   private double[] lastPos; //store XYT at last line
-  
+
   
   /**
    * This is the default class constructor. An existing instance of the odometer is used. This is to
@@ -38,17 +41,22 @@ public class OdometryCorrection implements Runnable {
   public OdometryCorrection(SampleProvider lightSensor) throws OdometerExceptions {
 
     this.odometer = Odometer.getOdometer();
-
+    
+    x = -1;
+    y = -1;
+    
     this.lightSensor = lightSensor;
     sample = new float[lightSensor.sampleSize()];
     lastPos = null;
+    samples = new CircularArray();
   }
 
   /**
    * run method for odometer correction (required for Thread)
    * @throws OdometerExceptions
    */
-  public void run() {
+  @Override
+public void run() {
 	int lineCount = 0;
     long correctionStart, correctionEnd;
 
@@ -56,135 +64,48 @@ public class OdometryCorrection implements Runnable {
     while (true) {
       correctionStart = System.currentTimeMillis();
 
-      // TODO Trigger correction (When do I have information to correct?)
       lightSensor.fetchSample(sample, 0);
-      
-      //TODO: FILTER LIGHT SENSOR!!! MAKE SURE YOU"VE moved first
-      //done by checking if light sensor sample is less than the black line detection threshold
-      
-     
+
+	  //Lab2.lcd.drawString("Light Avg: " + samples.getAvg(), 0, 6);
+	  //Lab2.lcd.drawString("Diff: " + (samples.getAvg() - sample[0]), 0, 7);
+	  double[] pos = odometer.getXYT(); //current odo-position
       //To avoid a single line triggering this many times, verify that either
       //we haven't seen a line yet at all (lastPos == null) or we're sufficiently
       //far from the last line.
-      if (sample[0] < LIGHT_THRESHOLD && 
-    		  (lastPos == null || dist(lastPos, odometer.getXYT()) > DIST_THRESHOLD)) {
+	 if (sample[0] < samples.avg - LIGHT_THRESHOLD  && (lastPos == null 
+			|| dist(pos, lastPos) > DIST_THRESHOLD)) {
     	  
-    	  lineCount++; //line detected
-    	  Lab2.lcd.drawString(lineCount + " line(s) detected.", 0, 5);
-    	  
-    	  
-    	  if (lastPos == null) { //first line
-    		  lastPos = odometer.getXYT();
-       		  Lab2.OFFSET_Y = lastPos[1]; //get starting Y-offset
-       		  //reset y at first line
-       		  lastPos[1] = 0;
-       		  odometer.setY(0);
-    	  } else {
-    		  
-    		  // TODO Calculate new (accurate) robot position
-    		  //we have now reached a second line, ideally perpendicular to our trajectory!
-
-              // TODO Update odometer with new calculated (and more accurate) values
-    		  double[] pos = odometer.getXYT(); //current odo-position
+    	//Indicate detection of a line
+    	lineCount++; 
+    	Lab2.lcd.drawString(lineCount + " line(s) detected.", 0, 5);
     		 
-    		  
-			  
-    		  //heading correction
-    		  if (CORRECTION == CorrectionType.HEADING) {
-    			  //Here, we assume that the distance readings are accurate, and 
-    			  //update the heading to match the read distance.
-    			  
-    			  // The issue is that although we can find an error, we don't know the sign
-    			  //Haven't figured out a solution, but it's still cool to be able to 
-    			  //Find the error in angle
-    			  
-    			  double predictedDistance = 
-    					  Math.sqrt(Math.pow(lastPos[0] - pos[0], 2) +
-    							  	Math.pow(lastPos[1] - pos[1], 2));
-    			  //this should be true! If it isn't true, there is necessarily an error
-    			  //in the distance reading, or we crossed a non-perpendicular line.
-    			  
-    			  
-    			  if (predictedDistance > LINE_SPACING) {
-    				  double tError = Math.toDegrees(Math.acos(predictedDistance/LINE_SPACING));
-    				  //if we have some way of knowing the tendancy of the robot, we can choose to
-    				  //add or subtract this error, but that will take testing, and will be imperfect.
-    			  } else {
-    				  //?????
-    			  }
-    			  
-    			  
-    		  } 
-    		  
-    		  //distance correction (note: cannot correct the first line going in any direction because starts from centre
-    		  if (CORRECTION == CorrectionType.DISTANCE) {
-    			  
-    			  
-    			  if ((pos[0]-lastPos[0]<LINE_SPACING-DIST_THRESHOLD)) { //this is supposed to record offset at each turn
-    				 
-    				  if (Lab2.OFFSET_X == 0) { //if first right line
-    					Lab2.OFFSET_X = pos[0];
-    					pos[0] = 0;
-    					odometer.setX(0);
-    				 }else
-    					 Lab2.OFFSET_X = pos[0]; //get accurate x-offset
-    			  }
-    			  if ((pos[1]-lastPos[1]<LINE_SPACING-DIST_THRESHOLD)) { //if first right line
-    				  Lab2.OFFSET_Y = pos[1]; //get accurate x-offset
-    				  
-    			  }
-    			      			  
-    			  //1) upward (+Y) path: theta=0, y>x
-    			 if (pos[2]<T_THRESHOLD || (360-pos[2]<T_THRESHOLD)){  //theta approximately 0deg	 
-    				  odometer.setY(lastPos[1]+LINE_SPACING); //correct Y-value
-    				  Lab2.lcd.drawString("CORRECTED UP.", 0, 6); //display check	
-    			  }
-    			  //2) rightward (+X) path: theta=90, y>x
-    			  else if (Math.abs(pos[2]-90)<T_THRESHOLD && (pos[0]-lastPos[0]>LINE_SPACING-DIST_THRESHOLD)){ 
-    				  odometer.setX(lastPos[0]+LINE_SPACING); //correct X-value
-    				  Lab2.lcd.drawString("CORRECTED RIGHT.", 0, 6); //display check
-    			  }
-    			 //3) downward (-Y) path: theta = 180, x>y
-    			  else if (Math.abs(pos[2]-180)<T_THRESHOLD && (lastPos[1]-pos[1]>LINE_SPACING-DIST_THRESHOLD)){  
-    				  odometer.setY(lastPos[1]-LINE_SPACING); //correct Y-value
-    				  Lab2.lcd.drawString("CORRECTED DOWN.", 0, 6); //display check
-    			 }
-    			  //4)leftward path theta = 270, x>y
-    			  else if (Math.abs(pos[2]-270)<T_THRESHOLD && (lastPos[0]-pos[0]>LINE_SPACING-DIST_THRESHOLD)){
-     				 	  odometer.setX(lastPos[0]-LINE_SPACING); //correct Y-value
-      					  Lab2.lcd.drawString("CORRECTED LEFT.", 0, 6); //display check
-       			 }
-    			  
-    			  //finished correcting odometer, set currrent position as lastPos
-    			  lastPos = pos;
-    			  
-    			  //old correction code. commented out for now.
-    			  //these multipliers should be elements of {-1,1,0}
-    			//  int sin = (int) (Math.sin(Math.toRadians(pos[2]) + 0.5));
-    			//  int cos = (int) (Math.cos(Math.toRadians(pos[2]) + 0.5));
-    			//  if (sin == 0) {
-    				  //y
-    				//  odometer.setXYT(pos[0], lastPos[1] + sin * LINE_SPACING, pos[2]);
-    			//  } else {
-    			//	  //x change
-    			//	  odometer.setXYT(lastPos[1] + cos * LINE_SPACING, pos[1], pos[2]);
-    			 
-    			  }
-    		  }
-    	  }
+    	int sin = (int) Math.round(Math.sin(Math.toRadians(pos[2])));
+    	int cos = (int) Math.round(Math.cos(Math.toRadians(pos[2])));
+    	//are we going + or -? This matters b/c x and y refer to grid squares, 
+    	//not gridlines, so an x of 0 could mean we're crossing the line x=1 facing
+    	//down, or x = 0 facing up. Thus, an offset is needed based on the direction
+    	//Also note the SENSOR_Y term to indicate the center is the center of the wheel base
+    	int dirOffset = (sin + cos > 0) ? 0:1; 
+    	if (sin == 0) {
+    		y += cos; 
+    		odometer.setXYT(pos[0], LINE_SPACING * (y + dirOffset) - cos*SENSOR_Y, pos[2]);
+    	} else if (cos == 0) { //implicit, but good to write out
+    		x += sin;
+    		odometer.setXYT(LINE_SPACING * (x + dirOffset) - sin*SENSOR_Y, pos[1], pos[2]);
+    	}
+    	
+
+    	Lab2.lcd.drawString("(" + x + ", " + y + ")         ", 0, 6);
+    	
+       	//update last pos of line detected
+    	lastPos = odometer.getXYT();  
+    	
+      }
+	 
+	 //Add the sample to the rolling average
+      samples.add(sample[0]);
       
-      //unneccessary in new code because checks error threshold
-      //If we've turned dramatically, this wont be useful, so nullify last data
-      //try {
-    //	  if (lastPos != null && Math.abs(odometer.getXYT()[2] - lastPos[2]) > T_THRESHOLD) { //check this
-    //		  lastPos = null;
-   // 	  }
-   //   } catch (NullPointerException npe) {//do nothing
-   // 	  }
-      
-    //  Lab2.lcd.drawString(lineCount + " line(s) detected", 0, 5);
-     
-      // this ensure the odometry correction occurs only once every period
+	 // this ensure the odometry correction occurs only once every period
       correctionEnd = System.currentTimeMillis();
       if (correctionEnd - correctionStart < CORRECTION_PERIOD) {
         try {
@@ -194,9 +115,7 @@ public class OdometryCorrection implements Runnable {
         }
       }
       
-    }
-      
- 
+    }//end loop
   }//end run method
   
   
@@ -208,6 +127,32 @@ public class OdometryCorrection implements Runnable {
 	  return Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1]-b[1],2)); //fixed distance formula
   }
   
-  
+  /*
+   * Stores a circular array of light values.
+   * Buffered to keep a rolling average.
+   * 
+   * We assume N is small enough that populating the buffer
+   * with data takes a trivial amount of time, although
+   * making the average work for less than N samples would be
+   * trivial with a conditional and a for loop.
+   */
+  private class CircularArray{
+	  private static final int N = 5;
+	  private float[] samples; 
+	  private int sampleIndex;
+	  private float avg;
+	  
+	  public CircularArray() {
+		  samples = new float[N];
+		  sampleIndex = 0;
+		  avg = 0;
+	  }
+	  
+	  public void add(float x) {
+		  avg = avg + 1f/N * (x - samples[sampleIndex]);
+		  samples[sampleIndex] = x;
+		  sampleIndex = (sampleIndex + 1) % N;
+	  }
+  }
     
 }

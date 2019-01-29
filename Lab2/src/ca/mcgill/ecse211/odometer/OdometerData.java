@@ -27,7 +27,8 @@ public class OdometerData {
                                                     // so far
   private static final int MAX_INSTANCES = 1; // Maximum number of
                                               // OdometerData instances
-
+  
+ 
   // Thread control tools
   private static Lock lock = new ReentrantLock(true); // Fair lock for
                                                       // concurrent writing
@@ -79,6 +80,9 @@ public class OdometerData {
    * Writes the current position and orientation of the robot onto the odoData array. odoData[0] =
    * x, odoData[1] = y; odoData[2] = theta;
    * 
+   * I HAVE UPDATED THIS CODE!
+   * It now centers the robot about the light sensor
+   * 
    * @param position the array to store the odometer data
    * @return the odometer data.
    */
@@ -91,7 +95,7 @@ public class OdometerData {
         doneReseting.await(); // Using await() is lighter on the CPU
         // than simple busy wait.
       }
-
+      
       position[0] = x;
       position[1] = y;
       position[2] = theta;
@@ -119,11 +123,12 @@ public class OdometerData {
     lock.lock();
     isReseting = true;
     try {
+    	
+	  theta = (theta + (360 + dtheta) % 360) % 360; // keeps the updates
+      // within 360
+      // degrees
       x += dx;
       y += dy;
-      theta = (theta + (360 + dtheta) % 360) % 360; // keeps the updates
-                                                    // within 360
-                                                    // degrees
       isReseting = false; // Done reseting
       doneReseting.signalAll(); // Let the other threads know that you are
                                 // done reseting
