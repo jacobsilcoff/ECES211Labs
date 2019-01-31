@@ -1,5 +1,5 @@
 // Lab2.java
-package ca.mcgill.ecse211.lab2;
+package ca.mcgill.ecse211.lab3;
 
 import ca.mcgill.ecse211.odometer.*;
 import lejos.hardware.Button;
@@ -15,7 +15,7 @@ import lejos.robotics.SampleProvider;
  * Main class for Lab2
  * @author Group 71, Helen Lin & Jacob Silcoff
  */
-public class Lab2 {
+public class Lab3 {
 
   // Motor Objects, and Robot related parameters
   private static final EV3LargeRegulatedMotor leftMotor =

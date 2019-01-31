@@ -7,7 +7,7 @@
  */
 package ca.mcgill.ecse211.odometer;
 
-import ca.mcgill.ecse211.lab2.Lab2;
+import ca.mcgill.ecse211.lab3.Lab3;
 import lejos.robotics.SampleProvider;
 
 public class OdometryCorrection implements Runnable {
@@ -83,7 +83,7 @@ public void run() {
     	  
     	//Indicate detection of a line
     	lineCount++; 
-    	Lab2.lcd.drawString(lineCount + " line(s) detected.", 0, 5);
+    	Lab3.lcd.drawString(lineCount + " line(s) detected.", 0, 5);
     		 
     	int sin = (int) Math.round(Math.sin(Math.toRadians(pos[2])));
     	int cos = (int) Math.round(Math.cos(Math.toRadians(pos[2])));
@@ -101,7 +101,7 @@ public void run() {
     	}
     	
 
-    	Lab2.lcd.drawString("(" + x + ", " + y + ")         ", 0, 6);
+    	Lab3.lcd.drawString("(" + x + ", " + y + ")         ", 0, 6);
     	
        	//update last pos of line detected
     	lastPos = odometer.getXYT();  
