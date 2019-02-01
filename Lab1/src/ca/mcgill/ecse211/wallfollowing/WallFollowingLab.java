@@ -34,6 +34,8 @@ public class WallFollowingLab {
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
   public static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  
+  public static int instructionNum = 0;
 
   // Main entry point - instantiate objects used and set up sensor
 
