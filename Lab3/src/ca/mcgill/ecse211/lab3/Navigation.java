@@ -44,6 +44,12 @@ public class Navigation extends Thread{
 		destX = destY = destT = 0;
 	}
 	
+	/**
+	 * Sets robot to travel to a given point,
+	 * updating the destination direction and position
+	 * @param x The desired x in cm
+	 * @param y The desired y in cm
+	 */
 	public void travelTo(double x, double y) {
 		destX = x;
 		destY = y;
@@ -54,6 +60,10 @@ public class Navigation extends Thread{
 		return odo;
 	}
 	
+	/**
+	 * Moves the robot forward a certain distance.
+	 * @param dist
+	 */
 	public void moveForward(double dist) {
 		leftMotor.setSpeed(FORWARD_SPEED);
 	    rightMotor.setSpeed(FORWARD_SPEED);
@@ -66,6 +76,11 @@ public class Navigation extends Thread{
 		return isNavigating;
 	}
 	
+	
+	/**
+	 * Turns the robot to a given angle theta
+	 * @param theta The desired angle in degrees
+	 */
 	public void turnTo(double theta) {
 		double presTheta = odo.getXYT()[2];
 		double ang = (theta - presTheta + 360) % 360;
@@ -87,6 +102,10 @@ public class Navigation extends Thread{
 	
 	enum State{INIT,TURNING,TRAVELING, EMERGENCY}
 	
+	/**
+	 * Implements a state machine of initializing, turning
+	 * taveling, or handling an emergency obstacle
+	 */
 	public void run() {
 		State state = State.INIT;
 		ObstacleAvoidance avoidance = new ObstacleAvoidance(this);
@@ -104,6 +123,8 @@ public class Navigation extends Thread{
 				}
 				break;
 			case TRAVELING:
+				//make sure desired distance is correct
+				updateT();
 				if (checkEmergency()) {
 					state = State.EMERGENCY;
 					avoidance = new ObstacleAvoidance(this);
@@ -133,14 +154,20 @@ public class Navigation extends Thread{
 		}
 	}
 	
+	/**
+	 * Polls the US sensor
+	 * @return The US reading in cm
+	 */
 	public float readUS() {
 		float[] usData = new float[usSensor.sampleSize()];
 		usSensor.fetchSample(usData, 0);
 		return (int) (usData[0] * 100.0);
 	}
 	
+	/*
+	 * Sets the motor speeds proportional to the robots direction
+	 */
 	private void updateTravel() {
-		updateT();
 		double dist = dist(new double[] {destX,destY}, odo.getXYT());
 		//slows down upon nearing destination
 		if (dist > 20) {

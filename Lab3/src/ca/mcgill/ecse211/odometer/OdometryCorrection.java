@@ -22,9 +22,6 @@ public class OdometryCorrection implements Runnable {
   private Odometer odometer;
   private SampleProvider lightSensor;
   
-  private int x;
-  private int y;
-  
   private float[] sample; //store light sensor sample
   
   private CircularArray samples;
@@ -41,17 +38,6 @@ public class OdometryCorrection implements Runnable {
   public OdometryCorrection(SampleProvider lightSensor) throws OdometerExceptions {
 
     this.odometer = Odometer.getOdometer();
-    /*
-     * x and y represent a discrete grid system broken up into blocks
-     * A block is given by (x,y) and is determined by the coordinates of the bottom
-     * left hand corner in units of the length of a gridsquare. Hence, (0,0) is the 
-     * block with the origin in the bottom left hand corner.
-     * We assume that the starting position is block (-1, -1), below and to the left 
-     * of the origin
-     */
-    x = -1;
-    y = -1;
-    
     this.lightSensor = lightSensor;
     sample = new float[lightSensor.sampleSize()];
     lastPos = null;
@@ -83,25 +69,19 @@ public void run() {
     	  
     	//Indicate detection of a line
     	lineCount++; 
-    	Lab3.lcd.drawString(lineCount + " line(s) detected.", 0, 5);
+    	Lab3.lcd.drawString(lineCount + " line(s) detected.", 0, 8);
     		 
-    	int sin = (int) Math.round(Math.sin(Math.toRadians(pos[2])));
-    	int cos = (int) Math.round(Math.cos(Math.toRadians(pos[2])));
-    	//are we going + or -? This matters b/c x and y refer to grid squares, 
-    	//not gridlines, so an x of 0 could mean we're crossing the line x=1 facing
-    	//down, or x = 0 facing up. Thus, an offset is needed based on the direction
-    	//Also note the SENSOR_Y term to indicate the center is the center of the wheel base
-    	int dirOffset = (sin + cos > 0) ? 0:1; 
-    	if (sin == 0) { //we're moving in the y direction
-    		y += cos; 
-    		odometer.setXYT(pos[0], LINE_SPACING * (y + dirOffset) - cos*SENSOR_Y, pos[2]);
-    	} else if (cos == 0) { //implicit, but good to write out
-    		x += sin;
-    		odometer.setXYT(LINE_SPACING * (x + dirOffset) - sin*SENSOR_Y, pos[1], pos[2]);
+    	/*
+    	 * Concept  is to figure out which x/y is closest to desired target
+    	 */
+    	if (pos[0] % LINE_SPACING < pos[1] % LINE_SPACING) {
+    		//here we round the x position
+    		odometer.setX(Math.round(pos[0]/LINE_SPACING) * LINE_SPACING);
     	}
-    	
-
-    	Lab3.lcd.drawString("(" + x + ", " + y + ")         ", 0, 6);
+    	else {
+    		//here we round the y position
+    		odometer.setY(Math.round(pos[1]/LINE_SPACING) * LINE_SPACING);
+    	}
     	
        	//update last pos of line detected
     	lastPos = odometer.getXYT();  
