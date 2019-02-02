@@ -13,7 +13,7 @@ public class Navigation extends Thread{
 	private static final double TILE_SIZE = 30.48;		//grid spacing (cm)
 	private static final double DIST_THRESH = 1;		//distance threshold (cm)
 	private static final double EMERGENCY_THRESH = 10;	//emergency threshold for US sensor obstacle threshold distance (cm)
-	private static final double T_THRESH = 0.5;			//turning angle threshold (deg)
+	private static final double T_THRESH = 0.25;			//turning angle threshold (deg)
 	
 	private static final int SLEEP_TIME = 30;			//sleep cycle (ms)
 	
@@ -52,7 +52,7 @@ public class Navigation extends Thread{
 		rRad = rightRadius;
 		isNavigating = false;
 		destX = destY = destT = 0; //default destination is (0,0,0)
-		this.usSensor = usSensor;
+		this.usSensor = usSensor; //added
 	}
 	
 	/**
@@ -62,12 +62,10 @@ public class Navigation extends Thread{
 	 * @param y The desired y in cm
 	 */
 	public void travelTo(double x, double y) {
-		destX = x*TILE_SIZE;
-		destY = y*TILE_SIZE;
+		destX = x*TILE_SIZE; //convert tile point to destination X coord (cm)
+		destY = y*TILE_SIZE; //convert Y tile pt
 		updateT();
 		isNavigating = true;
-		//turnTo (destT);
-		//updateTravel();
 		ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Dest:" + (int)destX +"," +(int)destY +"," +(int)destT, 0, 4);
 	
 	}
@@ -136,7 +134,7 @@ public class Navigation extends Thread{
 		while (true) {
 			switch(state) {
 			case INIT:
-				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: INIT", 0, 6);
+				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: INIT", 0, 6); //display state
 				if (isNavigating) {
 					state = State.TURNING;
 				}
