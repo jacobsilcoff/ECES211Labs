@@ -1,4 +1,3 @@
-// Lab2.java
 package ca.mcgill.ecse211.lab3;
 
 import ca.mcgill.ecse211.odometer.*;
@@ -13,12 +12,12 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 /*
- * Main class for Lab2
+ * Main class for Lab3
  * @author Group 71, Helen Lin & Jacob Silcoff
  */
 public class Lab3 {
 
-  // Motor Objects, and Robot related parameters
+  // Motor Objects and Robot related parameters
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
   private static final EV3LargeRegulatedMotor rightMotor =
@@ -28,7 +27,7 @@ public class Lab3 {
   public static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static Navigation nav;
   public static final double WHEEL_RAD = 2.145; 	//wheel radius (cm)
-  public static final double TRACK = 14.6;		//wheel-base (cm) bigger = tighter
+  public static final double TRACK = 14.6;		//wheel-base (cm) bigger = tighter turns
   
   public static double OFFSET_X = -15; //ideal starting x-offset, used for correction only
   public static double OFFSET_Y = -10; //ideal starting y-offset, used for correction only
@@ -42,19 +41,19 @@ public class Lab3 {
     
 
     @SuppressWarnings("resource") // Because we don't bother to close this resource
-    SensorModes lightSensorMode = new EV3ColorSensor(lightSensorPort); // usSensor is the instance
+    SensorModes lightSensorMode = new EV3ColorSensor(lightSensorPort); // lightSensorMode is the instance
     SampleProvider lightSensor = lightSensorMode.getMode("Red");
     SensorModes usSensor = new EV3UltrasonicSensor(usPort); // usSensor is the instance
     SampleProvider usDistance = usSensor.getMode("Distance");
-    // TODO Complete implementation
-    OdometryCorrection odometryCorrection = new OdometryCorrection(lightSensor); // TODO Complete
-                                                                      // implementation
+   
+    OdometryCorrection odometryCorrection = new OdometryCorrection(lightSensor); //odometryCorrection instance
     
     
-    Display odometryDisplay = new Display(lcd); // No need to change
+    Display odometryDisplay = new Display(lcd); // No need to change from Lab 2
     
     nav = new Navigation(leftMotor, rightMotor, odometer, WHEEL_RAD, WHEEL_RAD, 
     		TRACK, usDistance);
+    nav.start();
 
 
 	
@@ -94,10 +93,11 @@ public class Lab3 {
       //Starts the robot
       (new Thread() {
         public void run() {
-          double[][] waypoints = {{0,1},{1,1},{2,2},{0,0}};
+          double[][] waypoints = {{2,1},{1,1},{1,2},{2,0}}; //waypoints to use for Test Data
           for (double[] pt : waypoints) {
         	  nav.travelTo(pt[0], pt[1]);
-        	  while (nav.isTraveling()) {
+        	  ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Go to: (" + pt[0] + "," +pt[1], 0, 3); //check
+        	  while (nav.isNavigating()) {
         		  try {
         			  Thread.sleep(500);
         		  } catch (Exception e) {}
