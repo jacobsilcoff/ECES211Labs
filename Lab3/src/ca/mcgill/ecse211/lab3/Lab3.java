@@ -91,14 +91,18 @@ public class Lab3 {
       }
       
       
-      
-      // spawn a new Thread to avoid SquareDriver.drive() from blocking
+      //Starts the robot
       (new Thread() {
         public void run() {
           double[][] waypoints = {{0,1},{1,1},{2,2},{0,0}};
-          nav.travelToWaypoints(waypoints);
-        	//double[] angles = {0,170,270,0,170,270,0,90};
-        	//nav.turnToThetas(angles);
+          for (double[] pt : waypoints) {
+        	  nav.travelTo(pt[0], pt[1]);
+        	  while (nav.isTraveling()) {
+        		  try {
+        			  Thread.sleep(500);
+        		  } catch (Exception e) {}
+        	  }
+          }
 
         }
       }).start();
