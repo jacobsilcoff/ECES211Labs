@@ -13,12 +13,12 @@ public class Navigation extends Thread{
 	private static final double TILE_SIZE = 30.48;		//grid spacing (cm)
 	private static final double DIST_THRESH = 1;		//distance threshold (cm)
 	private static final double EMERGENCY_THRESH = 10;	//emergency threshold for US sensor obstacle threshold distance (cm)
-	private static final double T_THRESH = 0.25;			//turning angle threshold (deg)
+	private static final double T_THRESH = 0.5;			//turning angle threshold (deg)
 	
 	private static final int SLEEP_TIME = 30;			//sleep cycle (ms)
 	
-	private final EV3LargeRegulatedMotor leftMotor;
-	private final EV3LargeRegulatedMotor rightMotor;
+	public final EV3LargeRegulatedMotor leftMotor; //public to allow for obstacle avoidance class to turn motors
+	public final EV3LargeRegulatedMotor rightMotor;
 	private final double lRad;
 	private final double rRad;
 	private final double track;
@@ -118,6 +118,7 @@ public class Navigation extends Thread{
 		    leftMotor.rotate(-convertAngle(lRad, track, ang), true);
 		    rightMotor.rotate(convertAngle(rRad, track, ang), false);
 		}
+	    updateT();//update new angle after turn;
 	}
 	
 	
@@ -156,10 +157,14 @@ public class Navigation extends Thread{
 					avoidance.start(); //start avoidance
 				}
 				else if (!facing(destT)) {
-					state = State.TURNING; //finish turning
+					state = State.TURNING; //re-check heading and finish turning
 				}
 				else if (!checkIfDone()) {
 					updateTravel(); //finish traveling
+					if (!facing(destT)){ //check heading again
+						updateT();
+						turnTo(destT);
+					}
 				} else { //Arrived
 					setSpeeds(0,0); //stop
 					isNavigating = false; //finished traveling
@@ -187,6 +192,7 @@ public class Navigation extends Thread{
 	public float readUS() {
 		float[] usData = new float[usSensor.sampleSize()];
 		usSensor.fetchSample(usData, 0);
+		ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("US:" +(usData[0] * 100.0), 0, 7);
 		return (int) (usData[0] * 100.0);
 	}
 	
