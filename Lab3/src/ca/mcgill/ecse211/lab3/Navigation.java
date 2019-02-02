@@ -4,18 +4,18 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.SampleProvider;
 
 /*
- * A class used to navigate the robot through the obstacles
+ * A class used to navigate the robot according to waypoints and obstacles.
  */
 public class Navigation extends Thread{
 	
-	private static final int FORWARD_SPEED = 250;//make 250 later
-	private static final int ROTATE_SPEED = 150;
-	private static final double TILE_SIZE = 30.48;
-	private static final double DIST_THRESH = 1;
-	private static final double EMERGENCY_THRESH = 10;
-	private static final double T_THRESH = 0.1;
+	private static final int FORWARD_SPEED = 250;		//forward speed (deg/s)
+	private static final int ROTATE_SPEED = 150;		//turning speed (deg/s)
+	private static final double TILE_SIZE = 30.48;		//grid spacing (cm)
+	private static final double DIST_THRESH = 1;		//distance threshold (cm)
+	private static final double EMERGENCY_THRESH = 10;	//emergency threshold for US sensor obstacle threshold distance (cm)
+	private static final double T_THRESH = 0.5;			//turning angle threshold (deg)
 	
-	private static final int SLEEP_TIME = 30;//10 ms sleep cycle
+	private static final int SLEEP_TIME = 30;			//sleep cycle (ms)
 	
 	private final EV3LargeRegulatedMotor leftMotor;
 	private final EV3LargeRegulatedMotor rightMotor;
@@ -31,6 +31,16 @@ public class Navigation extends Thread{
 	private double destY;
 	private double destT;
 	
+	/**
+	 * default constructor for navigation (called in Lab3.java)
+	 * @param left 		left motor
+	 * @param right 	right motor
+	 * @param odometer	odometer instance
+	 * @param leftRadius	left wheel radius
+	 * @param rightRadius	right wheel radius
+	 * @param track			track / wheelbase 
+	 * @param usSensor		US sensor sample provider
+	 */
 	public Navigation(EV3LargeRegulatedMotor left, EV3LargeRegulatedMotor right,
 			Odometer odometer, final double leftRadius, final double rightRadius, final double track, 
 			SampleProvider usSensor) {
@@ -41,19 +51,25 @@ public class Navigation extends Thread{
 		lRad = leftRadius;
 		rRad = rightRadius;
 		isNavigating = false;
-		destX = destY = destT = 0;
+		destX = destY = destT = 0; //default destination is (0,0,0)
+		this.usSensor = usSensor;
 	}
 	
 	/**
-	 * Sets robot to travel to a given point,
+	 * Sets robot to travel to a given TILE point,
 	 * updating the destination direction and position
 	 * @param x The desired x in cm
 	 * @param y The desired y in cm
 	 */
 	public void travelTo(double x, double y) {
-		destX = x;
-		destY = y;
+		destX = x*TILE_SIZE;
+		destY = y*TILE_SIZE;
 		updateT();
+		isNavigating = true;
+		//turnTo (destT);
+		//updateTravel();
+		ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Dest:" + (int)destX +"," +(int)destY +"," +(int)destT, 0, 4);
+	
 	}
 	
 	public Odometer getOdo() {
@@ -61,7 +77,7 @@ public class Navigation extends Thread{
 	}
 	
 	/**
-	 * Moves the robot forward a certain distance.
+	 * Moves the robot forward (straight) a certain distance.
 	 * @param dist
 	 */
 	public void moveForward(double dist) {
@@ -71,77 +87,89 @@ public class Navigation extends Thread{
 	    leftMotor.rotate(convertDistance(lRad, dist), true);
 	    rightMotor.rotate(convertDistance(rRad, dist), false);
 	}
-	
-	public boolean isTraveling() {
+
+	/**
+	 * This method checks isNavigating variable
+	 * @return true if another thread has called travelTo() or turnTo() and has yet to return; otherwise false
+	 */
+	public boolean isNavigating() {
 		return isNavigating;
 	}
 	
 	
 	/**
-	 * Turns the robot to a given angle theta
-	 * @param theta The desired angle in degrees
+	 * Turns the robot on the spot to a given angle theta using the MINIMUM angle
+	 * @param theta The desired absolute angle in degrees
 	 */
 	public void turnTo(double theta) {
-		double presTheta = odo.getXYT()[2];
-		double ang = (theta - presTheta + 360) % 360;
+		double presTheta = odo.getXYT()[2]; //get current heading
+		double ang = (theta - presTheta + 360) % 360; //gets absolute angle required to turn
 		leftMotor.setSpeed(ROTATE_SPEED);
 	    rightMotor.setSpeed(ROTATE_SPEED);
-		if (ang < 180) {
-			ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Ang: " + ang + "deg  ", 0, 5);
+		
+	    //turn using MINIMUM angle
+	    if (ang < 180) {
+			ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Ang: " + ang + "deg  ", 0, 5); //display angle of rotation
 			//increase angle
 		    leftMotor.rotate(convertAngle(lRad, track, ang), true);
 		    rightMotor.rotate(-convertAngle(rRad, track, ang), false);//make false for rough answer
 		} else {
-			ang = 360 - ang;
-			ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Ang: " + ang+"deg   ", 0, 5);
-		    //Need to check against odometer!
+			ang = 360 - ang; 
+			ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Ang: " + ang+"deg   ", 0, 5); //display angle of rotation
+		    //Need to check against odometer
 		    leftMotor.rotate(-convertAngle(lRad, track, ang), true);
 		    rightMotor.rotate(convertAngle(rRad, track, ang), false);
 		}
 	}
 	
+	
 	enum State{INIT,TURNING,TRAVELING, EMERGENCY}
 	
 	/**
 	 * Implements a state machine of initializing, turning
-	 * taveling, or handling an emergency obstacle
+	 * traveling, or handling an emergency obstacle
 	 */
 	public void run() {
 		State state = State.INIT;
+		
 		ObstacleAvoidance avoidance = new ObstacleAvoidance(this);
 		while (true) {
 			switch(state) {
 			case INIT:
+				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: INIT", 0, 6);
 				if (isNavigating) {
 					state = State.TURNING;
 				}
 				break;
 			case TURNING:
-				turnTo(destT);
-				if (facing(destT)) {
+				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: TURN", 0, 6);
+				turnTo(destT); //turn robot to destination theta
+				if (facing(destT)) { //if turned, start travel
 					state = State.TRAVELING;
 				}
 				break;
 			case TRAVELING:
+				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: TRVL", 0, 6);
 				//make sure desired distance is correct
 				updateT();
-				if (checkEmergency()) {
+				if (checkEmergency()) { //obstacle detected
 					state = State.EMERGENCY;
 					avoidance = new ObstacleAvoidance(this);
-					avoidance.start();
+					avoidance.start(); //start avoidance
 				}
 				else if (!facing(destT)) {
-					state = State.TURNING;
+					state = State.TURNING; //finish turning
 				}
 				else if (!checkIfDone()) {
-					updateTravel();
+					updateTravel(); //finish traveling
 				} else { //Arrived
-					setSpeeds(0,0);
-					isNavigating = false;
-					state = State.INIT;
+					setSpeeds(0,0); //stop
+					isNavigating = false; //finished traveling
+					state = State.INIT; //return to initialize case
 				}
 				break;
 			case EMERGENCY:
+				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: EMRG", 0, 6);
 				if (avoidance.isResolved()) {
 					state = State.TURNING;
 				}
@@ -164,8 +192,9 @@ public class Navigation extends Thread{
 		return (int) (usData[0] * 100.0);
 	}
 	
-	/*
-	 * Sets the motor speeds proportional to the robots direction
+	/**
+	 * Slows the motor speeds when nearing destination (<20cm)
+	 * 
 	 */
 	private void updateTravel() {
 		double dist = dist(new double[] {destX,destY}, odo.getXYT());
@@ -173,7 +202,7 @@ public class Navigation extends Thread{
 		if (dist > 20) {
 			setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
 		} else {
-			float motorSpeeds = (float)(dist/20 * (FORWARD_SPEED - 50) + 50);
+			float motorSpeeds = (float)(dist/20 * (FORWARD_SPEED - 50) + 50); //slower speed proportional to distance to dest
 			setSpeeds(motorSpeeds, motorSpeeds);
 		}
 		leftMotor.forward();
@@ -181,7 +210,7 @@ public class Navigation extends Thread{
 	}
 	
 	/**
-	 * Updates the destT to reflect
+	 * Updates the destT (heading) to reflect
 	 * the real position of the robot
 	 */
 	private void updateT() {
@@ -203,7 +232,6 @@ public class Navigation extends Thread{
 	/**
 	 * Checks if the robot is facing a certain angle
 	 * @param ang The angle to check
-	 * @return
 	 */
 	private boolean facing(double ang) {
 		double diff = Math.abs(odo.getXYT()[2] - (ang + 360)%360);
@@ -232,11 +260,17 @@ public class Navigation extends Thread{
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
 	}
 	
+	/**
+	 * Gets distance (cm) between two coordinates
+	 * @param a position array 1
+	 * @param b position array 2
+	 * @return distance (cm)
+	 */
 	private static double dist(double[] a, double[] b) {
 		if (a.length < 2 || b.length < 2) {
 			return -1;
 		}
-		return Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1]-b[1],2)); //fixed distance formula
+		return Math.sqrt(Math.pow(a[0]-b[0], 2) + Math.pow(a[1]-b[1],2)); //minimum distance formula
 	}
 
 }
