@@ -20,7 +20,11 @@ public class ObstacleAvoidance extends Thread{
 		 * Turns until it sees an optimal angle
 		 * -- might need to turn a bit more to miss the block!
 		 */
-		nav.setSpeeds(TURN_SPD, -TURN_SPD);
+		
+		nav.setSpeeds(TURN_SPD, TURN_SPD);
+		nav.leftMotor.forward();
+		nav.rightMotor.backward();
+		
 		while ((distNeeded = nav.readUS()) < SAFE_DIST) {
 			try {
 				sleep(30);
@@ -32,6 +36,8 @@ public class ObstacleAvoidance extends Thread{
 		//go forward an extra decimeter to avoid anything
 		nav.moveForward(distNeeded + 10);
 		safe = true;
+		
+		
 	}
 
 	public boolean isResolved() {
