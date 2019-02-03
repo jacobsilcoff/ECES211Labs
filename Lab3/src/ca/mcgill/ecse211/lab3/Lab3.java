@@ -26,11 +26,9 @@ public class Lab3 {
   private static final Port usPort  = LocalEV3.get().getPort("S1");
   public static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static Navigation nav;
-  public static final double WHEEL_RAD = 2.145; 	//wheel radius (cm)
-  public static final double TRACK = 14.6;		//wheel-base (cm) bigger = tighter turns
+  public static final double WHEEL_RAD = 2.20; 	//wheel radius (cm)
+  public static final double TRACK = 15.279;		//wheel-base (cm) bigger = greater turns
   
-  public static double OFFSET_X = -15; //ideal starting x-offset, used for correction only
-  public static double OFFSET_Y = -10; //ideal starting y-offset, used for correction only
 
   public static void main(String[] args) throws OdometerExceptions {
 
@@ -93,7 +91,7 @@ public class Lab3 {
       //Starts the robot
       (new Thread() {
         public void run() {
-          double[][] waypoints = {{2,1},{1,1},{1,2},{2,0}}; //waypoints to use for Test Data
+          double[][] waypoints = {{0,2},{2,2},{2,0},{0,0}}; //waypoints to use for Test Data
           for (double[] pt : waypoints) {
         	  nav.travelTo(pt[0], pt[1]);
         	  ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Go to: (" + pt[0] + "," +pt[1], 0, 3); //check

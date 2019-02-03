@@ -23,7 +23,6 @@ public class Odometer extends OdometerData implements Runnable {
   private EV3LargeRegulatedMotor leftMotor;
   private EV3LargeRegulatedMotor rightMotor;
 
-  //why is it called track what a bad variable name...
   private final double TRACK;
   private final double WHEEL_RAD;
   //Multiply by degrees to get distance moved by a single wheel

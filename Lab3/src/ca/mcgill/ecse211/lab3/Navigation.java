@@ -75,12 +75,14 @@ public class Navigation extends Thread{
 	}
 	
 	/**
-	 * Moves the robot forward (straight) a certain distance.
+	 * Moves the robot forward (straight) a certain distance. Used in obstacle avoidance
 	 * @param dist
 	 */
 	public void moveForward(double dist) {
-		leftMotor.setSpeed(FORWARD_SPEED);
-	    rightMotor.setSpeed(FORWARD_SPEED);
+		leftMotor.forward();
+		rightMotor.forward();
+		
+		this.setSpeeds(FORWARD_SPEED/4, FORWARD_SPEED/4); //move cautiously
 	    //Note: check against odometer!
 	    leftMotor.rotate(convertDistance(lRad, dist), true);
 	    rightMotor.rotate(convertDistance(rRad, dist), false);
@@ -259,6 +261,7 @@ public class Navigation extends Thread{
 	private static int convertDistance(double radius, double distance) {
 	    return (int) ((180.0 * distance) / (Math.PI * radius));
 	  }
+	
 
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
