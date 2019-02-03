@@ -5,7 +5,7 @@ public class ObstacleAvoidance extends Thread{
 	private Navigation nav;
 	private boolean safe;
 	private double distNeeded;
-	private static final int SAFE_T = 10; //extra theta to turn to avoid obstacle (deg)
+	private static final int SAFE_T = 35; //extra theta to turn to avoid obstacle (deg)
 	public static final int SAFE_DIST = 50; //safe distance from obstacle (cm)
 	public static final int TURN_SPD = 50;
 	
@@ -22,13 +22,10 @@ public class ObstacleAvoidance extends Thread{
 		//1. turn until an optimal avoidance angle is acheived
 		turnAvoid();
 		
-		
-		
-		//2.forward an extra decimeter to avoid anything
-		//must check obstacle simultaneously
+		//2. move forward an extra decimeter to avoid anything. 
 		int i =0;
 		while (3*i< distNeeded +10) {
-			if(nav.checkEmergency()) {
+			if(nav.checkEmergency()) { // must check obstacle simultaneously
 				turnAvoid();
 				i = 0; //reset i if new obstacle detected
 			}
@@ -38,6 +35,24 @@ public class ObstacleAvoidance extends Thread{
 			}
 		}
 		
+		//3. move back around obstacle to double check twice
+		for (int j=0; j<2;j++){
+			turnBack();
+			i = 0;
+			while (3*i< distNeeded +5) {
+				if(nav.checkEmergency()) {
+					turnAvoid();
+					i = 0; //reset i if new obstacle detected
+				}
+				else {
+					nav.moveForward(3); // move by 3cm each time
+					i++;
+				}
+			}
+		}
+		
+		
+		//two clearances made, should be safe
 		safe = true;
 		
 		
@@ -65,6 +80,18 @@ public class ObstacleAvoidance extends Thread{
 		nav.setSpeeds(0, 0); //stop again
 	}
 	
+	/**
+	 * turn back method -- checks if obstacle is truly cleared
+	 * @return
+	 */
+	private void turnBack() {
+		nav.setSpeeds(0, 0); //stop
+		
+		//turn to halfway between current heading and dest heading and recheck obstacle
+		double halfAng = ((nav.getDestT()+ nav.getOdo().getXYT()[2])/2 +360 )%360;
+		nav.turnTo(halfAng);
+		nav.setSpeeds(0, 0); //stop again
+	}
 	
 	public boolean isResolved() {
 		return safe;

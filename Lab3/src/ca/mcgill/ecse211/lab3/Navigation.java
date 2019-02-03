@@ -9,10 +9,10 @@ import lejos.robotics.SampleProvider;
 public class Navigation extends Thread{
 	
 	private static final int FORWARD_SPEED = 250;		//forward speed (deg/s)
-	private static final int ROTATE_SPEED = 150;		//turning speed (deg/s)
+	private static final int ROTATE_SPEED = 100;		//turning speed (deg/s)
 	private static final double TILE_SIZE = 30.48;		//grid spacing (cm)
 	private static final double DIST_THRESH = 1;		//distance threshold (cm)
-	private static final double EMERGENCY_THRESH = 10;	//emergency threshold for US sensor obstacle threshold distance (cm)
+	public static final double EMERGENCY_THRESH = 17;	//emergency threshold for US sensor obstacle threshold distance (cm)
 	private static final double T_THRESH = 0.5;			//turning angle threshold (deg)
 	
 	private static final int SLEEP_TIME = 30;			//sleep cycle (ms)
@@ -214,6 +214,18 @@ public class Navigation extends Thread{
 		leftMotor.forward();
 		rightMotor.forward();
 	}
+	
+	/**
+	 * gets distance from current position to destination
+	 */
+	public double getdist() {
+		return dist(new double[] {destX,destY}, odo.getXYT());
+	}
+	
+	public double getDestT() {
+		return destT;
+	}
+	
 	
 	/**
 	 * Updates the destT (heading) to reflect
