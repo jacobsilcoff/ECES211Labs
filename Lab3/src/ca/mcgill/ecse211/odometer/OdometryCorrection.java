@@ -74,17 +74,20 @@ public void run() {
     	/*
     	 * Concept  is to figure out which x/y is closest to desired target
     	 */
-    	if (pos[0] % LINE_SPACING < pos[1] % LINE_SPACING) {
-    		//here we round the x position
-    		odometer.setX(Math.round(pos[0]/LINE_SPACING) * LINE_SPACING);
-    	}
-    	else {
-    		//here we round the y position
-    		odometer.setY(Math.round(pos[1]/LINE_SPACING) * LINE_SPACING);
+    	if (lineCount != 1) { //ignore first line because it is the sensor moving about starting point
+    		if (pos[0] % LINE_SPACING < pos[1] % LINE_SPACING) {
+        		//here we round the x position
+        		odometer.setX(Math.round(pos[0]/LINE_SPACING) * LINE_SPACING);
+        	}
+        	else {
+        		//here we round the y position
+        		odometer.setY(Math.round(pos[1]/LINE_SPACING) * LINE_SPACING);
+        	}
+        	
+           	//update last pos of line detected
+        	lastPos = odometer.getXYT();  
     	}
     	
-       	//update last pos of line detected
-    	lastPos = odometer.getXYT();  
     	
       }
 	 
