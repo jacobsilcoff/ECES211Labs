@@ -22,7 +22,7 @@ public class Lab3 {
   /**
    * The list of waypoints the robot travels between
    */
-  public static final double[][] WAYPOINTS = {{1,0}, {2,1}, {2,2}, {0,2}, {1,1}};
+  public static final double[][] WAYPOINTS = {{0,2}};
   /**
    * The robot's left motor
    */
@@ -118,17 +118,15 @@ public class Lab3 {
     //Starts the robot
     (new Thread() {
       public void run() {
-         //waypoints to use for Test Data
         for (double[] pt : WAYPOINTS) {
           nav.travelTo(pt[0], pt[1]);
-          LCD.drawString("Go to: (" + pt[0] + "," +pt[1], 0, 3); 
+          LCD.drawString("Go to: (" + pt[0] + "," + pt[1], 0, 3); 
           while (nav.isNavigating()) {
             try {
               Thread.sleep(500);
             } catch (Exception e) {}
           }
         }
-
       }
     }).start();
 
