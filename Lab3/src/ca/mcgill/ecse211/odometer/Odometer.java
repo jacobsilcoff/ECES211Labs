@@ -40,8 +40,8 @@ public class Odometer extends OdometerData implements Runnable {
    * @throws OdometerExceptions
    */
   private Odometer() throws OdometerExceptions {
-    odoData = OdometerData.getOdometerData(); // Allows access to x,y,z
-                                              // manipulation methods
+    odoData = OdometerData.getOdometerData(); // Allows access to x,y,z manipulation methods
+                                              
 
     //reset tacho count in motor
     Lab3.LEFT_MOTOR.resetTachoCount();
@@ -77,7 +77,6 @@ public class Odometer extends OdometerData implements Runnable {
    * This method is where the logic for the odometer will run. Use the methods provided from the
    * OdometerData class to implement the odometer.
    */
-  // run method (required for Thread)
   public void run() {
     long updateStart, updateEnd;
 
@@ -91,9 +90,7 @@ public class Odometer extends OdometerData implements Runnable {
       leftMotorTachoCount += leftDiff;
       rightMotorTachoCount += rightDiff;
       
-      
-      // TODO Calculate new robot position based on tachometer counts
-      
+     
       double leftDist = leftDiff * DIST_MULT; //left wheel distance traveled
       double rightDist = rightDiff * DIST_MULT; //right wheel distance traveled
       double disp = 0.5*(leftDist + rightDist); //vehicle displacement in the forward direction (average)
@@ -101,14 +98,12 @@ public class Odometer extends OdometerData implements Runnable {
       double dx, dy, dt; //displacement components in the x, y, and theta direction (heading
       
     
-      dt = Math.toDegrees((leftDist-rightDist)/Lab3.TRACK); //No arcsin needed b/c small angle
+      dt = Math.toDegrees((leftDist-rightDist)/Lab3.TRACK); 
       
-      //idk if adding full weight of dt is wise... maybe half of it? shouldnt matter much
       dx = disp * Math.sin(Math.toRadians(odo.getXYT()[2] + dt));
       dy = disp * Math.cos(Math.toRadians(odo.getXYT()[2] + dt));
       
       
-      // TODO Update odometer values with new calculated values
       odo.update(dx, dy, dt);
 
       // this ensures that the odometer only runs once every period

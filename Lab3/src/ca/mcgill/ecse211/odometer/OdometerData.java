@@ -13,7 +13,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Karim El-Baba
  * @author Michael Smith
  */
-
 public class OdometerData {
 
   // Position parameters
@@ -23,22 +22,22 @@ public class OdometerData {
 
   // Class control variables
   private volatile static int numberOfIntances = 0; // Number of OdometerData
-                                                    // objects instantiated
-                                                    // so far
+  // objects instantiated
+  // so far
   private static final int MAX_INSTANCES = 1; // Maximum number of
-                                              // OdometerData instances
-  
- 
+  // OdometerData instances
+
+
   // Thread control tools
   private static Lock lock = new ReentrantLock(true); // Fair lock for
-                                                      // concurrent writing
+  // concurrent writing
   private volatile boolean isReseting = false; // Indicates if a thread is
-                                               // trying to reset any
-                                               // position parameters
+  // trying to reset any
+  // position parameters
   private Condition doneReseting = lock.newCondition(); // Let other threads
-                                                        // know that a reset
-                                                        // operation is
-                                                        // over.
+  // know that a reset
+  // operation is
+  // over.
 
   private static OdometerData odoData = null;
 
@@ -58,13 +57,13 @@ public class OdometerData {
    * MultipleOdometerDataException.
    * 
    * @return An OdometerData object
-   * @throws OdometerExceptions
+   * @throws OdometerExceptions If multiple odometers exist
    */
   public synchronized static OdometerData getOdometerData() throws OdometerExceptions {
     if (odoData != null) { // Return existing object
       return odoData;
     } else if (numberOfIntances < MAX_INSTANCES) { // create object and
-                                                   // return it
+      // return it
       odoData = new OdometerData();
       numberOfIntances += 1;
       return odoData;
@@ -80,9 +79,6 @@ public class OdometerData {
    * Writes the current position and orientation of the robot onto the odoData array. odoData[0] =
    * x, odoData[1] = y; odoData[2] = theta;
    * 
-   * I HAVE UPDATED THIS CODE!
-   * It now centers the robot about the light sensor
-   * 
    * @param position the array to store the odometer data
    * @return the odometer data.
    */
@@ -95,7 +91,7 @@ public class OdometerData {
         doneReseting.await(); // Using await() is lighter on the CPU
         // than simple busy wait.
       }
-      
+
       position[0] = x;
       position[1] = y;
       position[2] = theta;
@@ -123,15 +119,15 @@ public class OdometerData {
     lock.lock();
     isReseting = true;
     try {
-    	
-	  theta = (theta + (360 + dtheta) % 360) % 360; // keeps the updates
+
+      theta = (theta + (360 + dtheta) % 360) % 360; // keeps the updates
       // within 360
       // degrees
       x += dx;
       y += dy;
       isReseting = false; // Done reseting
       doneReseting.signalAll(); // Let the other threads know that you are
-                                // done reseting
+      // done reseting
     } finally {
       lock.unlock();
     }
@@ -154,7 +150,7 @@ public class OdometerData {
       this.theta = theta;
       isReseting = false; // Done reseting
       doneReseting.signalAll(); // Let the other threads know that you are
-                                // done reseting
+      // done reseting
     } finally {
       lock.unlock();
     }
@@ -172,7 +168,7 @@ public class OdometerData {
       this.x = x;
       isReseting = false; // Done reseting
       doneReseting.signalAll(); // Let the other threads know that you are
-                                // done reseting
+      // done reseting
     } finally {
       lock.unlock();
     }
@@ -189,8 +185,9 @@ public class OdometerData {
     try {
       this.y = y;
       isReseting = false; // Done reseting
-      doneReseting.signalAll(); // Let the other threads know that you are
-                                // done reseting
+      // Let the other threads know that you are
+      // done reseting
+      doneReseting.signalAll(); 
     } finally {
       lock.unlock();
     }
@@ -198,7 +195,6 @@ public class OdometerData {
 
   /**
    * Overrides theta. Use for odometry correction.
-   * 
    * @param theta the value of theta
    */
   public void setTheta(double theta) {
@@ -206,9 +202,12 @@ public class OdometerData {
     isReseting = true;
     try {
       this.theta = theta;
-      isReseting = false; // Done reseting
-      doneReseting.signalAll(); // Let the other threads know that you are
-                                // done reseting
+      //done reseting 
+      isReseting = false; 
+      /* Let the other threads know that you are
+       * done reseting
+       */
+      doneReseting.signalAll(); 
     } finally {
       lock.unlock();
     }

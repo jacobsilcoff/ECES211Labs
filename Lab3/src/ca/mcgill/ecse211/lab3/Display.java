@@ -11,20 +11,18 @@ import lejos.hardware.lcd.TextLCD;
 public class Display implements Runnable {
 
   private Odometer odo;
-  private TextLCD lcd;
   private double[] position;
   private final long DISPLAY_PERIOD = 25;
   private long timeout = Long.MAX_VALUE;
 
   /**
-   * This is the class constructor
+   * Creates a display object
    * 
    * @param odoData
    * @throws OdometerExceptions 
    */
-  public Display(TextLCD lcd) throws OdometerExceptions {
+  public Display() throws OdometerExceptions {
     odo = Odometer.getOdometer();
-    this.lcd = lcd;
   }
 
   /**
@@ -36,12 +34,11 @@ public class Display implements Runnable {
   public Display(TextLCD lcd, long timeout) throws OdometerExceptions {
     odo = Odometer.getOdometer();
     this.timeout = timeout;
-    this.lcd = lcd;
   }
 
   public void run() {
     
-    lcd.clear();
+    Lab3.LCD.clear();
     
     long updateStart, updateEnd;
 
@@ -54,9 +51,9 @@ public class Display implements Runnable {
       
       // Print x,y, and theta information
       DecimalFormat numberFormat = new DecimalFormat("######0.00");
-      lcd.drawString("X: " + numberFormat.format(position[0]), 0, 0);
-      lcd.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
-      lcd.drawString("T: " + numberFormat.format(position[2]), 0, 2); 
+      Lab3.LCD.drawString("X: " + numberFormat.format(position[0]), 0, 0);
+      Lab3.LCD.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
+      Lab3.LCD.drawString("T: " + numberFormat.format(position[2]), 0, 2); 
       
       // this ensures that the data is updated only once every period
       updateEnd = System.currentTimeMillis();

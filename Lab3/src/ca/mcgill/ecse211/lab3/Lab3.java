@@ -20,9 +20,21 @@ import lejos.robotics.SampleProvider;
 public class Lab3 {
 
   /**
-   * The list of waypoints the robot travels between
+   * MAPS is a list of waypoint maps, where MAPS[n] 
+   * corresponds to the list of waypoints for the (n+1)th map
+   * described in the lab
    */
-  public static final double[][] WAYPOINTS = {{0,2}};
+  public static final double[][][] MAPS = 
+    {{{0,2},{1,1},{2,2},{2,1},{1,0}},
+        {{1,1},{0,2},{2,2},{2,1},{1,0}},
+        {{1,0},{2,1},{2,2},{0,2},{1,1}},
+        {{0,1},{1,2},{1,0},{2,1},{2,2}}};
+
+  /**
+   * The number corresponding to which map to use, with
+   * the nth map corresponding to MAP_SELECTION = (n-1)
+   */
+  public static final int MAP_SELECTION = 0;
   /**
    * The robot's left motor
    */
@@ -50,7 +62,6 @@ public class Lab3 {
     LIGHT_SENSOR = lightSensorMode.getMode("Red");
     SensorModes usSensor = new EV3UltrasonicSensor(usPort);
     US_SENSOR = usSensor.getMode("Distance");
-
   }
   /**
    * The LCD used to output during the robot's journey
@@ -65,71 +76,63 @@ public class Lab3 {
    * A larger value equates to greater turns
    */
   public static final double TRACK = 15.279;
-  public static Navigation nav;
- 
 
+  /**
+   * Starts the program by creating threads for navigation,
+   * odometry, and display. Makes the robot travel between points in a 
+   * pre-determined grid.
+   * @param args Arguments from the command line, which are not used.
+   * @throws OdometerExceptions
+   */
   public static void main(String[] args) throws OdometerExceptions {
 
     int buttonChoice;
 
-    Odometer odometer = Odometer.getOdometer(); 
     OdometryCorrection odometryCorrection = new OdometryCorrection();
+    Display odometryDisplay = new Display();
 
-    Display odometryDisplay = new Display(LCD);
-
-    nav = new Navigation(odometer);
-    nav.start();
-
-
-
-    // clear the display
     LCD.clear();
-
-    // ask the user whether the motors should drive in a square or float
     LCD.drawString("Press any button", 0, 0);
     LCD.drawString("to start!", 0, 1);
-
-    Button.waitForAnyPress(); // Record choice (left or right press)
+    Button.waitForAnyPress();
     LCD.clear();
-
-
     // ask the user whether odometery correction should be run or not
     LCD.drawString("< Left | Right >", 0, 0);
     LCD.drawString("  No   | with   ", 0, 1);
     LCD.drawString(" corr- | corr-  ", 0, 2);
     LCD.drawString(" ection| ection ", 0, 3);
     LCD.drawString("       |        ", 0, 4);
-
     buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
 
     // Start odometer and display threads
-    Thread odoThread = new Thread(odometer);
-    odoThread.start();
-    Thread odoDisplayThread = new Thread(odometryDisplay);
-    odoDisplayThread.start();
-
-    // Start correction if right button was pressed
+    (new Thread(Odometer.getOdometer())).start();
+    (new Thread(odometryDisplay)).start();
     if (buttonChoice == Button.ID_RIGHT) {
-      Thread odoCorrectionThread = new Thread(odometryCorrection);
-      odoCorrectionThread.start();
+      (new Thread(odometryCorrection)).start();
     }
 
 
     //Starts the robot
     (new Thread() {
-      public void run() {
-        for (double[] pt : WAYPOINTS) {
-          nav.travelTo(pt[0], pt[1]);
-          LCD.drawString("Go to: (" + pt[0] + "," + pt[1], 0, 3); 
-          while (nav.isNavigating()) {
-            try {
-              Thread.sleep(500);
-            } catch (Exception e) {}
+      public void run(){
+        Navigation nav;
+        try {
+          nav = new Navigation();
+          nav.start();
+          for (double[] pt : MAPS[MAP_SELECTION]) {
+            nav.travelTo(pt[0], pt[1]);
+            LCD.drawString("Go to: (" + pt[0] + "," + pt[1], 0, 3); 
+            while (nav.isNavigating()) {
+              try {
+                Thread.sleep(500);
+              } catch (Exception e) {}
+            }
           }
+        } catch (OdometerExceptions e1) {
+          e1.printStackTrace();
         }
       }
     }).start();
-
 
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
