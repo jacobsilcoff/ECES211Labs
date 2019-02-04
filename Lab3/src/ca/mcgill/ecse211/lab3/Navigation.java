@@ -17,14 +17,11 @@ public class Navigation extends Thread{
 	
 	private static final int SLEEP_TIME = 30;			//sleep cycle (ms)
 	
-	public final EV3LargeRegulatedMotor leftMotor; //public to allow for obstacle avoidance class to turn motors
-	public final EV3LargeRegulatedMotor rightMotor;
 	private final double lRad;
 	private final double rRad;
 	private final double track;
 	private boolean isNavigating;
 	private Odometer odo;
-	private SampleProvider usSensor;
 	
 	private static int numInstructions = 0;
 	private double destX;
@@ -39,20 +36,15 @@ public class Navigation extends Thread{
 	 * @param leftRadius	left wheel radius
 	 * @param rightRadius	right wheel radius
 	 * @param track			track / wheelbase 
-	 * @param usSensor		US sensor sample provider
+	 * @param Lab3.US_SENSOR		US sensor sample provider
 	 */
-	public Navigation(EV3LargeRegulatedMotor left, EV3LargeRegulatedMotor right,
-			Odometer odometer, final double leftRadius, final double rightRadius, final double track, 
-			SampleProvider usSensor) {
-		leftMotor = left;
-		rightMotor = right;
+	public Navigation(Odometer odometer) {
 		odo = odometer;
-		this.track = track;
-		lRad = leftRadius;
-		rRad = rightRadius;
+		this.track = Lab3.TRACK;
+		lRad = Lab3.WHEEL_RAD;
+		rRad = Lab3.WHEEL_RAD;
 		isNavigating = false;
 		destX = destY = destT = 0; //default destination is (0,0,0)
-		this.usSensor = usSensor; //added
 	}
 	
 	/**
@@ -66,7 +58,7 @@ public class Navigation extends Thread{
 		destY = y*TILE_SIZE; //convert Y tile pt
 		updateT();
 		isNavigating = true;
-		ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Dest:" + (int)destX +"," +(int)destY +"," +(int)destT, 0, 4);
+		Lab3.LCD.drawString("Dest:" + (int)destX +"," +(int)destY +"," +(int)destT, 0, 4);
 	
 	}
 	
@@ -79,13 +71,13 @@ public class Navigation extends Thread{
 	 * @param dist
 	 */
 	public void moveForward(double dist) {
-		leftMotor.forward();
-		rightMotor.forward();
+		Lab3.LEFT_MOTOR.forward();
+		Lab3.RIGHT_MOTOR.forward();
 		
 		this.setSpeeds(FORWARD_SPEED/4, FORWARD_SPEED/4); //move cautiously
 	    //Note: check against odometer!
-	    leftMotor.rotate(convertDistance(lRad, dist), true);
-	    rightMotor.rotate(convertDistance(rRad, dist), false);
+	    Lab3.LEFT_MOTOR.rotate(convertDistance(lRad, dist), true);
+	    Lab3.RIGHT_MOTOR.rotate(convertDistance(rRad, dist), false);
 	}
 
 	/**
@@ -104,21 +96,21 @@ public class Navigation extends Thread{
 	public void turnTo(double theta) {
 		double presTheta = odo.getXYT()[2]; //get current heading
 		double ang = (theta - presTheta + 360) % 360; //gets absolute angle required to turn
-		leftMotor.setSpeed(ROTATE_SPEED);
-	    rightMotor.setSpeed(ROTATE_SPEED);
+		Lab3.LEFT_MOTOR.setSpeed(ROTATE_SPEED);
+	    Lab3.RIGHT_MOTOR.setSpeed(ROTATE_SPEED);
 		
 	    //turn using MINIMUM angle
 	    if (ang < 180) {
-			ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Ang: " + ang + "deg  ", 0, 5); //display angle of rotation
+			Lab3.LCD.drawString("Ang: " + ang + "deg  ", 0, 5); //display angle of rotation
 			//increase angle
-		    leftMotor.rotate(convertAngle(lRad, track, ang), true);
-		    rightMotor.rotate(-convertAngle(rRad, track, ang), false);//make false for rough answer
+		    Lab3.LEFT_MOTOR.rotate(convertAngle(lRad, track, ang), true);
+		    Lab3.RIGHT_MOTOR.rotate(-convertAngle(rRad, track, ang), false);//make false for rough answer
 		} else {
 			ang = 360 - ang; 
-			ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Ang: " + ang+"deg   ", 0, 5); //display angle of rotation
+			Lab3.LCD.drawString("Ang: " + ang+"deg   ", 0, 5); //display angle of rotation
 		    //Need to check against odometer
-		    leftMotor.rotate(-convertAngle(lRad, track, ang), true);
-		    rightMotor.rotate(convertAngle(rRad, track, ang), false);
+		    Lab3.LEFT_MOTOR.rotate(-convertAngle(lRad, track, ang), true);
+		    Lab3.RIGHT_MOTOR.rotate(convertAngle(rRad, track, ang), false);
 		}
 	    updateT();//update new angle after turn;
 	}
@@ -137,20 +129,20 @@ public class Navigation extends Thread{
 		while (true) {
 			switch(state) {
 			case INIT:
-				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: INIT", 0, 6); //display state
+				Lab3.LCD.drawString("State: INIT", 0, 6); //display state
 				if (isNavigating) {
 					state = State.TURNING;
 				}
 				break;
 			case TURNING:
-				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: TURN", 0, 6);
+				Lab3.LCD.drawString("State: TURN", 0, 6);
 				turnTo(destT); //turn robot to destination theta
 				if (facing(destT)) { //if turned, start travel
 					state = State.TRAVELING;
 				}
 				break;
 			case TRAVELING:
-				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: TRVL", 0, 6);
+				Lab3.LCD.drawString("State: TRVL", 0, 6);
 				//make sure desired distance is correct
 				updateT();
 				if (checkEmergency()) { //obstacle detected
@@ -174,7 +166,7 @@ public class Navigation extends Thread{
 				}
 				break;
 			case EMERGENCY:
-				ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("State: EMRG", 0, 6);
+				Lab3.LCD.drawString("State: EMRG", 0, 6);
 				if (avoidance.isResolved()) {
 					state = State.TURNING;
 				}
@@ -192,9 +184,9 @@ public class Navigation extends Thread{
 	 * @return The US reading in cm
 	 */
 	public float readUS() {
-		float[] usData = new float[usSensor.sampleSize()];
-		usSensor.fetchSample(usData, 0);
-		ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("US:" +(usData[0] * 100.0), 0, 7);
+		float[] usData = new float[Lab3.US_SENSOR.sampleSize()];
+		Lab3.US_SENSOR.fetchSample(usData, 0);
+		Lab3.LCD.drawString("US:" +(usData[0] * 100.0), 0, 7);
 		return (int) (usData[0] * 100.0);
 	}
 	
@@ -211,8 +203,8 @@ public class Navigation extends Thread{
 			float motorSpeeds = (float)(dist/20 * (FORWARD_SPEED - 50) + 50); //slower speed proportional to distance to dest
 			setSpeeds(motorSpeeds, motorSpeeds);
 		}
-		leftMotor.forward();
-		rightMotor.forward();
+		Lab3.LEFT_MOTOR.forward();
+		Lab3.RIGHT_MOTOR.forward();
 	}
 	
 	/**
@@ -262,12 +254,12 @@ public class Navigation extends Thread{
 	}
 	
 	public void setSpeeds(float l, float r) {
-		leftMotor.setSpeed(l);
-		rightMotor.setSpeed(r);
+		Lab3.LEFT_MOTOR.setSpeed(l);
+		Lab3.RIGHT_MOTOR.setSpeed(r);
 	}
 	private void setSpeeds(int l, int r) {
-		leftMotor.setSpeed(l);
-		rightMotor.setSpeed(r);
+		Lab3.LEFT_MOTOR.setSpeed(l);
+		Lab3.RIGHT_MOTOR.setSpeed(r);
 	}
 	
 	private static int convertDistance(double radius, double distance) {

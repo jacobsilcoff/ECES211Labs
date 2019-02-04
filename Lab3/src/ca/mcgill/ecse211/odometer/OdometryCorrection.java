@@ -20,7 +20,6 @@ public class OdometryCorrection implements Runnable {
 
   
   private Odometer odometer;
-  private SampleProvider lightSensor;
   
   private float[] sample; //store light sensor sample
   
@@ -35,11 +34,10 @@ public class OdometryCorrection implements Runnable {
    * 
    * @throws OdometerExceptions
    */
-  public OdometryCorrection(SampleProvider lightSensor) throws OdometerExceptions {
+  public OdometryCorrection() throws OdometerExceptions {
 
     this.odometer = Odometer.getOdometer();
-    this.lightSensor = lightSensor;
-    sample = new float[lightSensor.sampleSize()];
+    sample = new float[Lab3.LIGHT_SENSOR.sampleSize()];
     lastPos = null;
     samples = new CircularArray();
   }
@@ -57,7 +55,7 @@ public void run() {
     while (true) {
       correctionStart = System.currentTimeMillis();
 
-      lightSensor.fetchSample(sample, 0);
+      Lab3.LIGHT_SENSOR.fetchSample(sample, 0);
 
 	  double[] pos = odometer.getXYT(); //current odo-position
 	  
@@ -69,7 +67,7 @@ public void run() {
     	  
     	//Indicate detection of a line
     	lineCount++; 
-    	Lab3.lcd.drawString(lineCount + " line(s) detected.", 0, 8);
+    	Lab3.LCD.drawString(lineCount + " line(s) detected.", 0, 8);
     		 
     	/*
     	 * Concept  is to figure out which x/y is closest to desired target

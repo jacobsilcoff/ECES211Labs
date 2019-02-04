@@ -10,6 +10,7 @@
 
 package ca.mcgill.ecse211.odometer;
 
+import ca.mcgill.ecse211.lab3.Lab3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 public class Odometer extends OdometerData implements Runnable {
@@ -20,11 +21,8 @@ public class Odometer extends OdometerData implements Runnable {
   // Motors and related variables
   private int leftMotorTachoCount;
   private int rightMotorTachoCount;
-  private EV3LargeRegulatedMotor leftMotor;
-  private EV3LargeRegulatedMotor rightMotor;
 
-  private final double TRACK;
-  private final double WHEEL_RAD;
+
   //Multiply by degrees to get distance moved by a single wheel
   private final double DIST_MULT;
 
@@ -37,68 +35,42 @@ public class Odometer extends OdometerData implements Runnable {
    * This is the default constructor of this class. It initiates all motors and variables once.It
    * cannot be accessed externally.
    * 
-   * @param leftMotor
-   * @param rightMotor
+   * @param LEFT_MOTOR
+   * @param RIGHT_MOTOR
    * @throws OdometerExceptions
    */
-  private Odometer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
-      final double TRACK, final double WHEEL_RAD) throws OdometerExceptions {
+  private Odometer() throws OdometerExceptions {
     odoData = OdometerData.getOdometerData(); // Allows access to x,y,z
                                               // manipulation methods
-    this.leftMotor = leftMotor;
-    this.rightMotor = rightMotor;
+
     //reset tacho count in motor
-    this.leftMotor.resetTachoCount();
-    this.rightMotor.resetTachoCount();
+    Lab3.LEFT_MOTOR.resetTachoCount();
+    Lab3.RIGHT_MOTOR.resetTachoCount();
 
     // Reset the values of x, y and z to defaults
     odoData.setXYT(0, 0, 0);
     
     //reset tacho count in motor
-    this.leftMotor.resetTachoCount();
-    this.rightMotor.resetTachoCount();
+    Lab3.LEFT_MOTOR.resetTachoCount();
+    Lab3.RIGHT_MOTOR.resetTachoCount();
 
     this.leftMotorTachoCount = 0;
     this.rightMotorTachoCount = 0;
 
-    this.TRACK = TRACK;
-    this.WHEEL_RAD = WHEEL_RAD;
-    this.DIST_MULT = (Math.PI * WHEEL_RAD / 180);
+    this.DIST_MULT = (Math.PI * Lab3.WHEEL_RAD / 180);
 
   }
 
   /**
    * This method is meant to ensure only one instance of the odometer is used throughout the code.
-   * 
-   * @param leftMotor
-   * @param rightMotor
-   * @return new or existing Odometer Object
-   * @throws OdometerExceptions
    */
-  public synchronized static Odometer getOdometer(EV3LargeRegulatedMotor leftMotor,
-      EV3LargeRegulatedMotor rightMotor, final double TRACK, final double WHEEL_RAD)
-      throws OdometerExceptions {
+  public synchronized static Odometer getOdometer() throws OdometerExceptions {
     if (odo != null) { // Return existing object
       return odo;
     } else { // create object and return it
-      odo = new Odometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
+      odo = new Odometer();
       return odo;
     }
-  }
-
-  /**
-   * This class is meant to return the existing Odometer Object. It is meant to be used only if an
-   * odometer object has been created
-   * 
-   * @return error if no previous odometer exists
-   */
-  public synchronized static Odometer getOdometer() throws OdometerExceptions {
-
-    if (odo == null) {
-      throw new OdometerExceptions("No previous Odometer exits.");
-
-    }
-    return odo;
   }
 
   /**
@@ -113,8 +85,8 @@ public class Odometer extends OdometerData implements Runnable {
       updateStart = System.currentTimeMillis();
       
       //Measure differences then update
-      int leftDiff = leftMotor.getTachoCount() - leftMotorTachoCount;
-      int rightDiff = rightMotor.getTachoCount() - rightMotorTachoCount;
+      int leftDiff = Lab3.LEFT_MOTOR.getTachoCount() - leftMotorTachoCount;
+      int rightDiff = Lab3.RIGHT_MOTOR.getTachoCount() - rightMotorTachoCount;
       
       leftMotorTachoCount += leftDiff;
       rightMotorTachoCount += rightDiff;
@@ -129,7 +101,7 @@ public class Odometer extends OdometerData implements Runnable {
       double dx, dy, dt; //displacement components in the x, y, and theta direction (heading
       
     
-      dt = Math.toDegrees((leftDist-rightDist)/TRACK); //No arcsin needed b/c small angle
+      dt = Math.toDegrees((leftDist-rightDist)/Lab3.TRACK); //No arcsin needed b/c small angle
       
       //idk if adding full weight of dt is wise... maybe half of it? shouldnt matter much
       dx = disp * Math.sin(Math.toRadians(odo.getXYT()[2] + dt));

@@ -1,5 +1,10 @@
 package ca.mcgill.ecse211.lab3;
 
+/**
+ * This class represents a routine that can be used
+ * by the robot to avoid hitting an obstacle. 
+ * @author Team 71
+ */
 public class ObstacleAvoidance extends Thread{
 	
 	private Navigation nav;
@@ -64,8 +69,8 @@ public class ObstacleAvoidance extends Thread{
 	private void turnAvoid() {
 		distNeeded = nav.readUS();				
 		nav.setSpeeds(TURN_SPD, TURN_SPD);
-		nav.leftMotor.forward();
-		nav.rightMotor.backward();
+		Lab3.LEFT_MOTOR.forward();
+		Lab3.RIGHT_MOTOR.backward();
 			
 		while (( nav.readUS()) < SAFE_DIST) { //turn until obstacle is not detected
 			try {
