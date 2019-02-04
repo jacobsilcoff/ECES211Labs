@@ -11,18 +11,35 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
-/*
- * Main class for Lab3
+/**
+ * This is the main class for Lab3. 
+ * It allows the user to choose whether or not the robot is corrected,
+ * and start it on a course of predefined waypoints.
  * @author Group 71, Helen Lin & Jacob Silcoff
  */
 public class Lab3 {
 
-  // Motor Objects and Robot related parameters
+  /**
+   * The list of waypoints the robot travels between
+   */
+  public static final double[][] WAYPOINTS = {{1,0}, {2,1}, {2,2}, {0,2}, {1,1}};
+  /**
+   * The robot's left motor
+   */
   public static final EV3LargeRegulatedMotor LEFT_MOTOR =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  /**
+   * The robot's right motor
+   */
   public static final EV3LargeRegulatedMotor RIGHT_MOTOR =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  /**
+   * The robot's ultrasonic sensor
+   */
   public static final SampleProvider US_SENSOR;
+  /**
+   * The robot's light sensor
+   */
   public static final SampleProvider LIGHT_SENSOR;
   static {
     Port lightSensorPort = LocalEV3.get().getPort("S3");
@@ -35,22 +52,30 @@ public class Lab3 {
     US_SENSOR = usSensor.getMode("Distance");
 
   }
+  /**
+   * The LCD used to output during the robot's journey
+   */
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
+  /**
+   * The radius of the robot's tires
+   */
+  public static final double WHEEL_RAD = 2.20;
+  /**
+   * The distance between the robot's two wheels
+   * A larger value equates to greater turns
+   */
+  public static final double TRACK = 15.279;
   public static Navigation nav;
-  public static final double WHEEL_RAD = 2.20; 	//wheel radius (cm)
-  public static final double TRACK = 15.279;		//wheel-base (cm) bigger = greater turns
-
+ 
 
   public static void main(String[] args) throws OdometerExceptions {
 
     int buttonChoice;
 
-    // Odometer related objects
     Odometer odometer = Odometer.getOdometer(); 
-    OdometryCorrection odometryCorrection = new OdometryCorrection(); //odometryCorrection instance
+    OdometryCorrection odometryCorrection = new OdometryCorrection();
 
-
-    Display odometryDisplay = new Display(LCD); // No need to change from Lab 2
+    Display odometryDisplay = new Display(LCD);
 
     nav = new Navigation(odometer);
     nav.start();
@@ -93,10 +118,10 @@ public class Lab3 {
     //Starts the robot
     (new Thread() {
       public void run() {
-        double[][] waypoints = {{1,0}, {2,1}, {2,2}, {0,2}, {1,1}}; //waypoints to use for Test Data
-        for (double[] pt : waypoints) {
+         //waypoints to use for Test Data
+        for (double[] pt : WAYPOINTS) {
           nav.travelTo(pt[0], pt[1]);
-          LCD.drawString("Go to: (" + pt[0] + "," +pt[1], 0, 3); //check
+          LCD.drawString("Go to: (" + pt[0] + "," +pt[1], 0, 3); 
           while (nav.isNavigating()) {
             try {
               Thread.sleep(500);
