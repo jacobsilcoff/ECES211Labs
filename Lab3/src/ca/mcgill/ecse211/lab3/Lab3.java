@@ -91,7 +91,7 @@ public class Lab3 {
       //Starts the robot
       (new Thread() {
         public void run() {
-          double[][] waypoints = {{0,2},{2,2},{2,0},{0,0}}; //waypoints to use for Test Data
+          double[][] waypoints = {{1,0}, {2,1}, {2,2}, {0,2}, {1,1}}; //waypoints to use for Test Data
           for (double[] pt : waypoints) {
         	  nav.travelTo(pt[0], pt[1]);
         	  ca.mcgill.ecse211.lab3.Lab3.lcd.drawString("Go to: (" + pt[0] + "," +pt[1], 0, 3); //check
