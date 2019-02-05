@@ -12,39 +12,38 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 /**
- * This is the main class for Lab3. 
- * It allows the user to choose whether or not the robot is corrected,
- * and start it on a course of predefined waypoints.
+ * This is the main class for Lab3. It allows the user to choose whether or not the robot is
+ * corrected, and start it on a course of predefined waypoints.
+ * 
  * @author Group 71, Helen Lin & Jacob Silcoff
  */
 public class Lab3 {
 
   /**
-   * MAPS is a list of waypoint maps, where MAPS[n] 
-   * corresponds to the list of waypoints for the (n+1)th map
-   * described in the lab
+   * MAPS is a list of waypoint maps, where MAPS[n] corresponds to the list of waypoints for the
+   * (n+1)th map described in the lab demo FAQ (four total), MAPS[5] is the map used for test data
+   * in report#3, and MAPS[6] is a square map for testing purposes.
    */
-  public static final double[][][] MAPS = 
-    {{{0,2},{1,1},{2,2},{2,1},{1,0}},
-        {{1,1},{0,2},{2,2},{2,1},{1,0}},
-        {{1,0},{2,1},{2,2},{0,2},{1,1}},
-        {{0,1},{1,2},{1,0},{2,1},{2,2}}};
+  public static final double[][][] MAPS = { { {0, 2}, {1, 1}, {2, 2}, {2, 1}, {1, 0}},
+      { {1, 1}, {0, 2}, {2, 2}, {2, 1}, {1, 0}}, { {1, 0}, {2, 1}, {2, 2}, {0, 2}, {1, 1}},
+      { {0, 1}, {1, 2}, {1, 0}, {2, 1}, {2, 2}}, { {2, 1}, {1, 1}, {1, 2}, {2, 0}},
+      { {0, 2}, {2, 2}, {2, 0}, {0, 0}}};
 
   /**
-   * The number corresponding to which map to use, with
-   * the nth map corresponding to MAP_SELECTION = (n-1)
+   * The number corresponding to which map to use, with the nth map corresponding to MAP_SELECTION =
+   * (n-1)
    */
-  public static final int MAP_SELECTION = 0;
+  public static final int MAP_SELECTION = 2;
   /**
    * The robot's left motor
    */
-  public static final EV3LargeRegulatedMotor LEFT_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  public static final EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(LocalEV3.get()
+      .getPort("D"));
   /**
    * The robot's right motor
    */
-  public static final EV3LargeRegulatedMotor RIGHT_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  public static final EV3LargeRegulatedMotor RIGHT_MOTOR = new EV3LargeRegulatedMotor(LocalEV3
+      .get().getPort("A"));
   /**
    * The robot's ultrasonic sensor
    */
@@ -55,10 +54,10 @@ public class Lab3 {
   public static final SampleProvider LIGHT_SENSOR;
   static {
     Port lightSensorPort = LocalEV3.get().getPort("S3");
-    Port usPort  = LocalEV3.get().getPort("S1");
+    Port usPort = LocalEV3.get().getPort("S1");
 
     @SuppressWarnings("resource")
-    SensorModes lightSensorMode = new EV3ColorSensor(lightSensorPort); 
+    SensorModes lightSensorMode = new EV3ColorSensor(lightSensorPort);
     LIGHT_SENSOR = lightSensorMode.getMode("Red");
     SensorModes usSensor = new EV3UltrasonicSensor(usPort);
     US_SENSOR = usSensor.getMode("Distance");
@@ -68,19 +67,18 @@ public class Lab3 {
    */
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
   /**
-   * The radius of the robot's tires
+   * The radius of the robot's tires (in cm)
    */
-  public static final double WHEEL_RAD = 2.20;
+  public static final double WHEEL_RAD = 2.18;
   /**
-   * The distance between the robot's two wheels
-   * A larger value equates to greater turns
+   * The distance between the robot's two wheels in cm A larger value equates to greater turns
    */
-  public static final double TRACK = 15.279;
+  public static final double TRACK = 15.1401;
 
   /**
-   * Starts the program by creating threads for navigation,
-   * odometry, and display. Makes the robot travel between points in a 
-   * pre-determined grid.
+   * Starts the program by creating threads for navigation, odometry, and display. Makes the robot
+   * travel between points in a pre-determined grid.
+   * 
    * @param args Arguments from the command line, which are not used.
    * @throws OdometerExceptions
    */
@@ -88,7 +86,7 @@ public class Lab3 {
 
     int buttonChoice;
 
-    OdometryCorrection odometryCorrection = new OdometryCorrection();
+    final OdometryCorrection odometryCorrection = new OdometryCorrection();
     Display odometryDisplay = new Display();
 
     LCD.clear();
@@ -112,20 +110,21 @@ public class Lab3 {
     }
 
 
-    //Starts the robot
+    // Starts the robot
     (new Thread() {
-      public void run(){
+      public void run() {
         Navigation nav;
         try {
-          nav = new Navigation();
+          nav = new Navigation(odometryCorrection);
           nav.start();
           for (double[] pt : MAPS[MAP_SELECTION]) {
             nav.travelTo(pt[0], pt[1]);
-            LCD.drawString("Go to: (" + pt[0] + "," + pt[1], 0, 3); 
+            LCD.drawString("Go to: (" + pt[0] + "," + pt[1], 0, 3);
             while (nav.isNavigating()) {
               try {
                 Thread.sleep(500);
-              } catch (Exception e) {}
+              } catch (Exception e) {
+              }
             }
           }
         } catch (OdometerExceptions e1) {
