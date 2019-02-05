@@ -187,7 +187,7 @@ public class OdometerData {
       isReseting = false; // Done reseting
       // Let the other threads know that you are
       // done reseting
-      doneReseting.signalAll(); 
+      doneReseting.signalAll();
     } finally {
       lock.unlock();
     }
@@ -195,6 +195,7 @@ public class OdometerData {
 
   /**
    * Overrides theta. Use for odometry correction.
+   * 
    * @param theta the value of theta
    */
   public void setTheta(double theta) {
@@ -202,12 +203,12 @@ public class OdometerData {
     isReseting = true;
     try {
       this.theta = theta;
-      //done reseting 
-      isReseting = false; 
-      /* Let the other threads know that you are
-       * done reseting
+      // done reseting
+      isReseting = false;
+      /*
+       * Let the other threads know that you are done reseting
        */
-      doneReseting.signalAll(); 
+      doneReseting.signalAll();
     } finally {
       lock.unlock();
     }
