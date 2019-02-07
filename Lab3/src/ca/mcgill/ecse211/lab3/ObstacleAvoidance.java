@@ -14,7 +14,7 @@ public class ObstacleAvoidance extends Thread {
   /**
    * The extra distance past the obstacle used to give the robot room to turn
    */
-  public static final int EXTRA_DIST = 10;
+  public static final int EXTRA_DIST = 7;
   /**
    * The motor speed used by the robot when turning
    */
@@ -44,6 +44,7 @@ public class ObstacleAvoidance extends Thread {
    * 90deg counter clockwise, so that it (in theory) is looking directly at the obstacle it just
    * drove past. (7) Repeat steps 1-3 once (8) Return control to the navigation thread
    */
+  @Override
   public void run() {
     double startAngle = nav.getOdo().getXYT()[2];
     movePastEdge();

@@ -112,7 +112,9 @@ public class Lab3 {
 
     // Starts the robot
     (new Thread() {
-      public void run() {
+
+      @Override
+      public void run(){
         Navigation nav;
         try {
           nav = new Navigation(odometryCorrection);

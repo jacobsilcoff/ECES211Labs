@@ -2,9 +2,9 @@ package ca.mcgill.ecse211.lab3;
 
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.robotics.SampleProvider;
+
 
 /*
  * A class used to navigate the robot according to waypoints and obstacles.
@@ -169,6 +169,7 @@ public class Navigation extends Thread {
    * Implements a state machine of initializing, turning traveling, or handling an emergency
    * obstacle
    */
+  @Override
   public void run() {
     State state = State.INIT;
     ObstacleAvoidance avoidance = new ObstacleAvoidance(this);

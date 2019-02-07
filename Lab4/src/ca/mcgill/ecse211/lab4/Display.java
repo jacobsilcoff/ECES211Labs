@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211.lab3;
+package ca.mcgill.ecse211.lab4;
 
 import java.text.DecimalFormat;
 import ca.mcgill.ecse211.odometer.Odometer;
@@ -19,7 +19,7 @@ public class Display implements Runnable {
    * Creates a display object
    * 
    * @param odoData
-   * @throws OdometerExceptions
+   * @throws OdometerExceptions 
    */
   public Display() throws OdometerExceptions {
     odo = Odometer.getOdometer();
@@ -29,7 +29,7 @@ public class Display implements Runnable {
    * This is the overloaded class constructor
    * 
    * @param odoData
-   * @throws OdometerExceptions
+   * @throws OdometerExceptions 
    */
   public Display(TextLCD lcd, long timeout) throws OdometerExceptions {
     odo = Odometer.getOdometer();
@@ -38,9 +38,9 @@ public class Display implements Runnable {
 
   @Override
   public void run() {
-
-    Lab3.LCD.clear();
-
+    
+    Lab4.LCD.clear();
+    
     long updateStart, updateEnd;
 
     long tStart = System.currentTimeMillis();
@@ -49,13 +49,13 @@ public class Display implements Runnable {
 
       // Retrieve x, y and Theta information
       position = odo.getXYT();
-
+      
       // Print x,y, and theta information
       DecimalFormat numberFormat = new DecimalFormat("######0.00");
-      Lab3.LCD.drawString("X: " + numberFormat.format(position[0]), 0, 0);
-      Lab3.LCD.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
-      Lab3.LCD.drawString("T: " + numberFormat.format(position[2]), 0, 2);
-
+      Lab4.LCD.drawString("X: " + numberFormat.format(position[0]), 0, 0);
+      Lab4.LCD.drawString("Y: " + numberFormat.format(position[1]), 0, 1);
+      Lab4.LCD.drawString("T: " + numberFormat.format(position[2]), 0, 2); 
+      
       // this ensures that the data is updated only once every period
       updateEnd = System.currentTimeMillis();
       if (updateEnd - updateStart < DISPLAY_PERIOD) {

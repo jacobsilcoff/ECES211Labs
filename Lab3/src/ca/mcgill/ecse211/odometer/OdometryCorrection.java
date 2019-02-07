@@ -7,7 +7,6 @@
 package ca.mcgill.ecse211.odometer;
 
 import ca.mcgill.ecse211.lab3.Lab3;
-import lejos.robotics.SampleProvider;
 
 /**
  * Represents a thread that uses a light sensor to update the values of a robots odometer to reduce
