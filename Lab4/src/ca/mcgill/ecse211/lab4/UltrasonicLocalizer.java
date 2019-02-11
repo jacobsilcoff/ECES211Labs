@@ -21,7 +21,7 @@ public class UltrasonicLocalizer extends Thread {
   /**
    * error threshold for finding falling or rising edge angles (cm)
    */
-  private static final double ERROR_THRES = 2;
+  private static final double ERROR_THRESH = 2;
 
 
   private Odometer odo;
@@ -29,9 +29,7 @@ public class UltrasonicLocalizer extends Thread {
   private AveragedBuffer samples;
   private Mode mode;
 
-  private double theta1; // first localization angle
-  private double theta2; // second localization angle
-  private double thetaNorth; // localization of 0deg
+
 
   /**
    * default constructor for US localizer for rising or falling edge localization
@@ -51,7 +49,6 @@ public class UltrasonicLocalizer extends Thread {
     try {
       this.nav = new Navigation();
     } catch (OdometerExceptions e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
     nav.start();
@@ -59,62 +56,38 @@ public class UltrasonicLocalizer extends Thread {
 
 
   /**
-   * turns robot COUNTERCLOCKWISE to find 1st falling edge
-   * 
-   * @return double theta1;
+   * Turns the robot clockwise or counterclockwise
+   * until a falling or rising edge is detected, as 
+   * measured by the ultrasonic sensor, and then returns
+   * the angle of that edge.
+   * @param rising True to find the rising edge, false for falling
+   * @param cw True to turn clockwise, false for counter clockwise
+   * @return
    */
-  private double getFirstFalling() {
+  public double getEdge(boolean rising, boolean cw) {
+    int dir = cw? 1 : -1;
+    nav.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED);
 
-    while (readUS() < DETECTION_DISTANCE + ERROR_THRES) {
-      nav.setSpeeds(ROTATE_SPEED, -ROTATE_SPEED);
+    while (rising == readUS() > DETECTION_DISTANCE + ERROR_THRESH) {
+      sleep();
     }
-    while (readUS() > DETECTION_DISTANCE) {
-      nav.setSpeeds(ROTATE_SPEED, -ROTATE_SPEED);
-    }
-    nav.setSpeeds(0, 0);// stops within the error threshold
-    return odo.getXYT()[2];
-  }
-
-  /**
-   * turns robot COUNTERCLOCKWISE to find 2nd falling edge
-   */
-  private double getSecondFalling() {
-    while (readUS() < DETECTION_DISTANCE + ERROR_THRES) {
-      nav.setSpeeds(-ROTATE_SPEED, ROTATE_SPEED);
-    }
-    while (readUS() > DETECTION_DISTANCE + ERROR_THRES) {
-      nav.setSpeeds(-ROTATE_SPEED, ROTATE_SPEED);
+    while (rising == readUS() < DETECTION_DISTANCE + ERROR_THRESH) {
+      sleep();
     }
     nav.setSpeeds(0, 0);// stop
     return odo.getXYT()[2];
   }
 
   /**
-   * turns robot COUNTERCLOCKWISE to find 1st rising edge
+   * Turns the robot clockwise or counterclockwise
+   * until an edge is detected, as measured by the ultrasonic sensor,
+   * and then returns the angle of that edge. Choice of falling or
+   * rising edge is based on the mode of the USLocalizer.
+   * @param cw True to turn clockwise, false for counter clockwise
+   * @return
    */
-  private double getFirstRising() {
-    while (readUS() > DETECTION_DISTANCE + ERROR_THRES) {
-      nav.setSpeeds(-ROTATE_SPEED, ROTATE_SPEED);
-    }
-    while (readUS() < DETECTION_DISTANCE + ERROR_THRES) {
-      nav.setSpeeds(-ROTATE_SPEED, ROTATE_SPEED);
-    }
-    nav.setSpeeds(0, 0);// stop
-    return odo.getXYT()[2];
-  }
-
-  /**
-   * turns robot COUNTERCLOCKWISE to find 2nd rising edge
-   */
-  private double getSecondRising() {
-    while (readUS() > DETECTION_DISTANCE + ERROR_THRES) {
-      nav.setSpeeds(ROTATE_SPEED, ROTATE_SPEED);
-    }
-    while (readUS() < DETECTION_DISTANCE + ERROR_THRES) {
-      nav.setSpeeds(ROTATE_SPEED, ROTATE_SPEED);
-    }
-    nav.setSpeeds(0, 0);// stop
-    return odo.getXYT()[2];
+  public double getEdge(boolean cw) {
+    return getEdge(mode == Mode.RISING_EDGE, cw);
   }
 
 
@@ -124,36 +97,27 @@ public class UltrasonicLocalizer extends Thread {
    * @param theta1 first angle detected from localization
    * @param theta2 2nd angle detected from localization
    */
-  private void localizeNorth(double theta1, double theta2) {
-    thetaNorth = 0;
+  private double localizeNorth(double theta1, double theta2) {
+    double thetaNorth = 0;
     double avgAngle = (theta1 + theta2) / 2;
     if (theta1 > theta2) {
       thetaNorth = 135 - avgAngle;
     } else {
       thetaNorth = 315 - avgAngle;
     }
+    return thetaNorth;
   }
 
   public void run() {
-
-    if (mode == Mode.FALLING_EDGE) {
-      // turns until falling edge is detected
-      theta1 = getFirstFalling();
-      // switch directions and turn until another falling edge is detected
-      theta2 = getSecondFalling();
-
-    } else {
-      // turns until rising edge is detected
-      theta1 = getFirstRising();
-      // switch directions + turn until another rising edge is detected
-      theta2 = getSecondRising();
-    }
-
-    // now we have the 1st and 2nd angles, get 0deg/north heading
-    localizeNorth(theta1, theta2);
+    
+    //Find first edge
+    double theta1 = getEdge(false);
+    // switch directions and turn until another edge is detected
+    double theta2 = getEdge(true);
 
     // turn to localized North
-    odo.setXYT(0, 0, odo.getXYT()[2] + thetaNorth); // correct current theta
+    // correct current theta
+    odo.setXYT(0, 0, odo.getXYT()[2] + localizeNorth(theta1, theta2)); 
     nav.turnTo(0); // turn to North/0deg
   }
 
@@ -177,7 +141,23 @@ public class UltrasonicLocalizer extends Thread {
     float[] usData = new float[Lab4.US_SENSOR.sampleSize()];
     Lab4.US_SENSOR.fetchSample(usData, 0);
     Lab4.LCD.drawString("US:" + (usData[0] * 100.0), 0, 7);
+    samples.add((int) (usData[0] * 100.0));
     return (int) (usData[0] * 100.0);
+  }
+
+  /**
+   * Polls the ultrasonic sensor and returns the result,
+   * which can use the averaged filter if desired
+   * @param buffered True to use rolling avg filter, false to get simple reading
+   * @return The US reading in cm
+   */
+  public float readUS(boolean buffered) {
+    if (buffered) {
+      readUS();
+      return samples.getAvg();
+    } else {
+      return readUS();
+    }
   }
 
   /**
