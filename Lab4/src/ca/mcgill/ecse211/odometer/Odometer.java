@@ -22,7 +22,7 @@ public class Odometer extends OdometerData implements Runnable {
   private int rightMotorTachoCount;
 
 
-  //Multiply by degrees to get distance moved by a single wheel
+  // Multiply by degrees to get distance moved by a single wheel
   private final double DIST_MULT;
 
   private double[] position;
@@ -40,16 +40,16 @@ public class Odometer extends OdometerData implements Runnable {
    */
   private Odometer() throws OdometerExceptions {
     odoData = OdometerData.getOdometerData(); // Allows access to x,y,z manipulation methods
-                                              
 
-    //reset tacho count in motor
+
+    // reset tacho count in motor
     Lab4.LEFT_MOTOR.resetTachoCount();
     Lab4.RIGHT_MOTOR.resetTachoCount();
 
     // Reset the values of x, y and z to defaults
     odoData.setXYT(0, 0, 0);
-    
-    //reset tacho count in motor
+
+    // reset tacho count in motor
     Lab4.LEFT_MOTOR.resetTachoCount();
     Lab4.RIGHT_MOTOR.resetTachoCount();
 
@@ -82,28 +82,29 @@ public class Odometer extends OdometerData implements Runnable {
 
     while (true) {
       updateStart = System.currentTimeMillis();
-      
-      //Measure differences then update
+
+      // Measure differences then update
       int leftDiff = Lab4.LEFT_MOTOR.getTachoCount() - leftMotorTachoCount;
       int rightDiff = Lab4.RIGHT_MOTOR.getTachoCount() - rightMotorTachoCount;
-      
+
       leftMotorTachoCount += leftDiff;
       rightMotorTachoCount += rightDiff;
-      
-     
-      double leftDist = leftDiff * DIST_MULT; //left wheel distance traveled
-      double rightDist = rightDiff * DIST_MULT; //right wheel distance traveled
-      double disp = 0.5*(leftDist + rightDist); //vehicle displacement in the forward direction (average)
-     
-      double dx, dy, dt; //displacement components in the x, y, and theta direction (heading
-      
-    
-      dt = Math.toDegrees((leftDist-rightDist)/Lab4.TRACK); 
-      
+
+
+      double leftDist = leftDiff * DIST_MULT; // left wheel distance traveled
+      double rightDist = rightDiff * DIST_MULT; // right wheel distance traveled
+      double disp = 0.5 * (leftDist + rightDist); // vehicle displacement in the forward direction
+                                                  // (average)
+
+      double dx, dy, dt; // displacement components in the x, y, and theta direction (heading
+
+
+      dt = Math.toDegrees((leftDist - rightDist) / Lab4.TRACK);
+
       dx = disp * Math.sin(Math.toRadians(odo.getXYT()[2] + dt));
       dy = disp * Math.cos(Math.toRadians(odo.getXYT()[2] + dt));
-      
-      
+
+
       odo.update(dx, dy, dt);
 
       // this ensures that the odometer only runs once every period

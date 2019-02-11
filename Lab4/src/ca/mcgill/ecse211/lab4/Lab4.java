@@ -12,9 +12,9 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 /**
- * This is the main class for Lab3. 
- * It allows the user to choose whether or not the robot is corrected,
- * and start it on a course of predefined waypoints.
+ * This is the main class for Lab4. It allows the user to choose localization using either Rising or
+ * Falling Edge methods.
+ * 
  * @author Group 71, Helen Lin & Jacob Silcoff
  */
 public class Lab4 {
@@ -22,13 +22,13 @@ public class Lab4 {
   /**
    * The robot's left motor
    */
-  public static final EV3LargeRegulatedMotor LEFT_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  public static final EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(LocalEV3.get()
+      .getPort("D"));
   /**
    * The robot's right motor
    */
-  public static final EV3LargeRegulatedMotor RIGHT_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  public static final EV3LargeRegulatedMotor RIGHT_MOTOR = new EV3LargeRegulatedMotor(LocalEV3
+      .get().getPort("A"));
   /**
    * The robot's ultrasonic sensor
    */
@@ -39,10 +39,10 @@ public class Lab4 {
   public static final SampleProvider LIGHT_SENSOR;
   static {
     Port lightSensorPort = LocalEV3.get().getPort("S3");
-    Port usPort  = LocalEV3.get().getPort("S1");
+    Port usPort = LocalEV3.get().getPort("S1");
 
     @SuppressWarnings("resource")
-    SensorModes lightSensorMode = new EV3ColorSensor(lightSensorPort); 
+    SensorModes lightSensorMode = new EV3ColorSensor(lightSensorPort);
     LIGHT_SENSOR = lightSensorMode.getMode("Red");
     SensorModes usSensor = new EV3UltrasonicSensor(usPort);
     US_SENSOR = usSensor.getMode("Distance");
@@ -56,8 +56,7 @@ public class Lab4 {
    */
   public static final double WHEEL_RAD = 2.20;
   /**
-   * The distance between the robot's two wheels
-   * A larger value equates to greater turns
+   * The distance between the robot's two wheels A larger value equates to greater turns
    */
   public static final double TRACK = 15.279;
 
@@ -65,7 +64,7 @@ public class Lab4 {
 
     int buttonChoice;
 
-    //OdometryCorrection odometryCorrection = new OdometryCorrection();
+    // OdometryCorrection odometryCorrection = new OdometryCorrection();
     Display odometryDisplay = new Display();
 
     LCD.clear();
@@ -79,12 +78,12 @@ public class Lab4 {
     // Start odometer and display threads
     (new Thread(Odometer.getOdometer())).start();
     (new Thread(odometryDisplay)).start();
-    
+
     UltrasonicLocalizer.Mode mode = UltrasonicLocalizer.Mode.FALLING_EDGE;
     if (buttonChoice == Button.ID_LEFT) {
       mode = UltrasonicLocalizer.Mode.RISING_EDGE;
     }
-    //Begins ultrasonic correction and awaits completion
+    // Begins ultrasonic correction and awaits completion
     UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(mode);
     usLocalizer.start();
     try {
@@ -97,9 +96,9 @@ public class Lab4 {
     LCD.drawString("to begin light", 0, 1);
     LCD.drawString("localization.  ", 0, 2);
     Button.waitForAnyPress();
-    LightLocalizer lightLoc = new LightLocalizer(); 
+    LightLocalizer lightLoc = new LightLocalizer();
     lightLoc.start();
-    
+
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
   }
