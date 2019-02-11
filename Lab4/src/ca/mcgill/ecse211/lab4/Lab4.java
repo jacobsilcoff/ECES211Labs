@@ -44,6 +44,7 @@ public class Lab4 {
     @SuppressWarnings("resource")
     SensorModes lightSensorMode = new EV3ColorSensor(lightSensorPort);
     LIGHT_SENSOR = lightSensorMode.getMode("Red");
+    @SuppressWarnings("resource")
     SensorModes usSensor = new EV3UltrasonicSensor(usPort);
     US_SENSOR = usSensor.getMode("Distance");
   }
@@ -59,6 +60,7 @@ public class Lab4 {
    * The distance between the robot's two wheels A larger value equates to greater turns
    */
   public static final double TRACK = 15.279;
+  
 
   public static void main(String[] args) throws OdometerExceptions {
 
@@ -86,11 +88,11 @@ public class Lab4 {
     // Begins ultrasonic correction and awaits completion
     UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(mode);
     usLocalizer.start();
-    try {
+    /*try {
       usLocalizer.join();
     } catch (InterruptedException e) {
       e.printStackTrace();
-    }
+    }*/
     LCD.clear();
     LCD.drawString("Use any button", 0, 1);
     LCD.drawString("to begin light", 0, 1);

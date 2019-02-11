@@ -4,7 +4,7 @@ import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 
 /*
- * A class used to navigate the robot according to waypoints and obstacles.
+ * A class used to navigate the robot
  */
 public class Navigation extends Thread {
   /**
@@ -43,6 +43,7 @@ public class Navigation extends Thread {
   private double destX;
   private double destY;
   private double destT;
+  private boolean on;
 
   /**
    * Default constructor for navigation (called in Lab3.java)
@@ -54,6 +55,7 @@ public class Navigation extends Thread {
     odo = Odometer.getOdometer();
     isNavigating = false;
     destX = destY = destT = 0;
+    on = true;
   }
 
   /**
@@ -141,7 +143,7 @@ public class Navigation extends Thread {
    * @author jacob silcoff
    */
   enum State {
-    INIT, TURNING, TRAVELING, EMERGENCY
+    INIT, TURNING, TRAVELING
   }
 
   /**
@@ -152,7 +154,7 @@ public class Navigation extends Thread {
   public void run() {
     State state = State.INIT;
     ObstacleAvoidance avoidance = new ObstacleAvoidance(this);
-    while (true) {
+    while (on) {
       switch (state) {
         case INIT:
           Lab4.LCD.drawString("State: INIT", 0, 6);
@@ -170,11 +172,7 @@ public class Navigation extends Thread {
         case TRAVELING:
           Lab4.LCD.drawString("State: TRVL", 0, 6);
           updateT();
-          if (checkEmergency()) { // obstacle detected
-            state = State.EMERGENCY;
-            avoidance = new ObstacleAvoidance(this);
-            avoidance.start();
-          } else if (!facing(destT)) {
+          if (!facing(destT)) {
             // re-check heading and finish turning
             state = State.TURNING;
           } else if (!checkIfDone()) {
@@ -189,12 +187,7 @@ public class Navigation extends Thread {
             state = State.INIT; // return to initialize case
           }
           break;
-        case EMERGENCY:
-          Lab4.LCD.drawString("State: EMRG", 0, 6);
-          if (avoidance.isResolved()) {
-            state = State.TURNING;
-          }
-          break;
+       
       }
       try {
         sleep(SLEEP_TIME);
@@ -311,9 +304,9 @@ public class Navigation extends Thread {
       Lab4.LEFT_MOTOR.forward();
 
     if (r < 0)
-      Lab4.LEFT_MOTOR.backward();
+      Lab4.RIGHT_MOTOR.backward();
     else
-      Lab4.LEFT_MOTOR.forward();
+      Lab4.RIGHT_MOTOR.forward();
   }
 
   /**
@@ -323,8 +316,7 @@ public class Navigation extends Thread {
    * @param r The desired speed of the right motor
    */
   private void setSpeeds(int l, int r) {
-    Lab4.LEFT_MOTOR.setSpeed(l);
-    Lab4.RIGHT_MOTOR.setSpeed(r);
+    setSpeeds((float) l, (float) r);
   }
 
 
@@ -364,6 +356,13 @@ public class Navigation extends Thread {
     }
     return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2)); // minimum distance
                                                                            // formula
+  }
+  
+  /**
+   * Ends the navigation thread. Cannot be undone.
+   */
+  public void end() {
+    on = false;
   }
 
 }

@@ -11,7 +11,7 @@ public class AveragedBuffer {
   /**
    * This value stores the default number of samples that are stored in the buffer
    */
-  private static final int DEFAULT_N = 5;
+  private static final int DEFAULT_N = 10;
   private int n;
   private float[] samples;
   private int sampleIndex;
@@ -57,5 +57,13 @@ public class AveragedBuffer {
    */
   public float getAvg() {
     return avg;
+  }
+  
+  /**
+   * Gets the size of the buffer
+   * @return the size of the buffer
+   */
+  public int getN() {
+    return n;
   }
 }

@@ -17,6 +17,10 @@ public class UltrasonicLocalizer extends Thread {
    * The motor speed used by the robot when turning
    */
   private static final int ROTATE_SPEED = 100;
+  /**
+   * The motor speed used by the robot when trying to find the min dist
+   */
+  private static final int MIN_SPEED = 30;
 
   /**
    * error threshold for finding falling or rising edge angles (cm)
@@ -38,7 +42,7 @@ public class UltrasonicLocalizer extends Thread {
    */
   public UltrasonicLocalizer(Mode mode) {
     this.mode = mode;
-    samples = new AveragedBuffer();
+    samples = new AveragedBuffer(5);
     try {
       odo = Odometer.getOdometer();
     } catch (OdometerExceptions e) {
@@ -67,14 +71,35 @@ public class UltrasonicLocalizer extends Thread {
   public double getEdge(boolean rising, boolean cw) {
     int dir = cw? 1 : -1;
     nav.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED);
-
-    while (rising == readUS() > DETECTION_DISTANCE + ERROR_THRESH) {
+    Lab4.LCD.drawString("STAGE 1", 0, 4);
+    double reading = readUS();
+    
+    while ((rising == (reading > DETECTION_DISTANCE + ERROR_THRESH)) || reading > 250) {
       sleep();
+      reading = readUS();
     }
-    while (rising == readUS() < DETECTION_DISTANCE + ERROR_THRESH) {
+    Lab4.LCD.drawString("STAGE 2", 0, 4);
+    while ((rising == (reading <= DETECTION_DISTANCE - ERROR_THRESH))
+        || reading > 250) {
       sleep();
+      reading = readUS();
     }
     nav.setSpeeds(0, 0);// stop
+
+    Lab4.LCD.drawString("Edge detected", 0, 4);
+ //   double lastReading = readUS();
+    //if rising edge, turn other direction
+    //tries to minimize value (ie, face perpendicular to wall)
+//    dir = rising? -dir:dir;
+//
+//    nav.setSpeeds(dir * MIN_SPEED, - dir * MIN_SPEED);
+//    while (lastReading >= (reading=readUS(true))) {
+//      lastReading = reading;
+//      sleep();
+//    }
+    nav.setSpeeds(0, 0);
+
+
     return odo.getXYT()[2];
   }
 
@@ -98,18 +123,31 @@ public class UltrasonicLocalizer extends Thread {
    * @param theta2 2nd angle detected from localization
    */
   private double localizeNorth(double theta1, double theta2) {
-    double thetaNorth = 0;
     double avgAngle = (theta1 + theta2) / 2;
-    if (theta1 > theta2) {
-      thetaNorth = 135 - avgAngle;
-    } else {
-      thetaNorth = 315 - avgAngle;
+
+    if (minAngle(avgAngle, theta1) > 90) {
+      avgAngle = (avgAngle + 180) % 360;
     }
-    return thetaNorth;
+
+    return (avgAngle + 135 + 360) % 360;
+  }
+
+  /**
+   * Returns the min angle between two angles
+   * @param t1 the first angle
+   * @param t2 the second angle
+   */
+  private static double minAngle(double t1, double t2) {
+    double ang = (t1 - t2 + 360) % 360;
+    if (ang > 180) {
+      return 360 - ang;
+    } else {
+      return ang;
+    }
   }
 
   public void run() {
-    
+
     //Find first edge
     double theta1 = getEdge(false);
     // switch directions and turn until another edge is detected
@@ -117,8 +155,10 @@ public class UltrasonicLocalizer extends Thread {
 
     // turn to localized North
     // correct current theta
-    odo.setXYT(0, 0, odo.getXYT()[2] + localizeNorth(theta1, theta2)); 
+    double realAngle = (odo.getXYT()[2] - localizeNorth(theta1, theta2) + 360) % 360;
+    odo.setXYT(0, 0, realAngle); 
     nav.turnTo(0); // turn to North/0deg
+    nav.end();
   }
 
   /**
@@ -140,9 +180,9 @@ public class UltrasonicLocalizer extends Thread {
   public float readUS() {
     float[] usData = new float[Lab4.US_SENSOR.sampleSize()];
     Lab4.US_SENSOR.fetchSample(usData, 0);
-    Lab4.LCD.drawString("US:" + (usData[0] * 100.0), 0, 7);
-    samples.add((int) (usData[0] * 100.0));
-    return (int) (usData[0] * 100.0);
+    Lab4.LCD.drawString("US:" + (usData[0] * 100.0) + ".........", 0, 7);
+    samples.add((usData[0] * 100f));
+    return usData[0] * 100f;
   }
 
   /**
