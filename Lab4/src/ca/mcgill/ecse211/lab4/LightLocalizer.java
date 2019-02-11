@@ -11,13 +11,13 @@ public class LightLocalizer extends Thread {
   /**
    * default constructor starts a navigation thread for light localizer
    */
-  public LightLocalizer() throws OdometerExceptions{
+  public LightLocalizer() throws OdometerExceptions {
     try {
       odo = Odometer.getOdometer();
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
-    this.nav = new Navigation(); //start a new nav thread
+    this.nav = new Navigation(); // start a new nav thread
     nav.start();
 
   }
@@ -25,20 +25,20 @@ public class LightLocalizer extends Thread {
   /**
    * Move robot to (0,0) position using nav system
    */
-  private void movetoOrigin(){
-    nav.travelTo(0,0);
+  private void movetoOrigin() {
+    nav.travelTo(0, 0);
     while (nav.isNavigating()) {
       try {
         Thread.sleep(500);
       } catch (Exception e) {
       }
     }
-    
+
   }
-  
+
   public void run() {
     this.movetoOrigin();
-    
-    //TODO: correct/localize lines at origin
+
+    // TODO: correct/localize lines at origin
   }
 }
