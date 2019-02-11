@@ -305,6 +305,15 @@ public class Navigation extends Thread {
   public void setSpeeds(float l, float r) {
     Lab4.LEFT_MOTOR.setSpeed(l);
     Lab4.RIGHT_MOTOR.setSpeed(r);
+    if (l < 0)
+      Lab4.LEFT_MOTOR.backward();
+    else
+      Lab4.LEFT_MOTOR.forward();
+
+    if (r < 0)
+      Lab4.LEFT_MOTOR.backward();
+    else
+      Lab4.LEFT_MOTOR.forward();
   }
 
   /**
