@@ -36,7 +36,7 @@ public class UltrasonicLocalizer extends Thread {
   /**
    * The number of readings in a row to be considered valid
    */
-  private static final int POLL_COUNT = 60;//was 30 as good filter
+  private static final int POLL_COUNT = 60;
 
 
   private Odometer odo;
