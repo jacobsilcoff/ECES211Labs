@@ -20,7 +20,7 @@ public class UltrasonicLocalizer extends Thread {
   /**
    * The distance (cm) below which the robot assumes it is looking at the wall
    */
-  public static final double DETECTION_DISTANCE = 25;
+  public static final double DETECTION_DISTANCE = 26;
   /**
    * The motor speed (deg/s) used by the robot when turning
    */
@@ -36,7 +36,7 @@ public class UltrasonicLocalizer extends Thread {
   /**
    * The number of readings in a row to be considered valid
    */
-  private static final int POLL_COUNT = 60;
+  private static final int POLL_COUNT = 30;
 
 
   private Odometer odo;
@@ -89,6 +89,7 @@ public class UltrasonicLocalizer extends Thread {
       sleep(); 
       reading = readUS(); //keep turning + updating readings
     }
+    
     Lab4.LCD.drawString("STAGE 2", 0, 4);
     while ((rising == (reading <= DETECTION_DISTANCE)) //now within edge threshold
         || reading > 250) {
@@ -101,6 +102,8 @@ public class UltrasonicLocalizer extends Thread {
     Sound.beep(); //audio notification
     
     double lastReading = readUS();
+    
+    
     //if rising edge, turn other direction
     //tries to minimize value (ie, face perpendicular to wall)
     dir = rising? -dir:dir;
@@ -165,15 +168,19 @@ public class UltrasonicLocalizer extends Thread {
   public void run() {
 
     //Find first edge
-    double theta1 = getEdge(false); //counter-clockwise
+    double theta1 = getEdge(mode == Mode.RISING_EDGE);
     // switch directions and turn until another edge is detected
-    double theta2 = getEdge(true);
+    double theta2 = getEdge(mode != Mode.RISING_EDGE);
 
     // correct current theta
     double realAngle = (odo.getXYT()[2] - localizeNorth(theta1, theta2) + 360) % 360;
     odo.setXYT(0, 0, realAngle); 
     
     // turn to localized North
+    nav.turnTo(0);
+    if (readUS() < DETECTION_DISTANCE) {
+      odo.setTheta(180);
+    }
     nav.turnTo(0);
     nav.end();
   }
