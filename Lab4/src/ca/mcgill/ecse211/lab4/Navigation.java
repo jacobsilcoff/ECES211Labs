@@ -10,7 +10,7 @@ public class Navigation extends Thread {
   /**
    * The motor speed of the robot when moving forward
    */
-  private static final int FORWARD_SPEED = 250;
+  private static final int FORWARD_SPEED = 100;
   /**
    * The motor speed used by the robot when turning
    */
@@ -214,10 +214,10 @@ public class Navigation extends Thread {
   private void updateTravel() {
     double dist = dist(new double[] {destX, destY}, odo.getXYT());
     // slows down upon nearing destination
-    if (dist > 20) {
+    if (dist > 10) {
       setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
     } else {
-      float motorSpeeds = (float) (dist / 20 * (FORWARD_SPEED - 50) + 50); // slower speed
+      float motorSpeeds = (float) (dist / 10 * (FORWARD_SPEED - 50) + 50); // slower speed
                                                                            // proportional to
                                                                            // distance to dest
       setSpeeds(motorSpeeds, motorSpeeds);

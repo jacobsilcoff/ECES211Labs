@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.lab4;
 
+import lejos.hardware.Sound;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 
@@ -9,6 +10,10 @@ public class LightLocalizer extends Thread {
    * The speed of the motors during localization
    */
   private static final int MOTOR_SPEED = 100;
+  /**
+   * This is the offset distance (cm) of our US sensor and the wheelbase axis
+   */
+  private static final double SENSOR_OFFSET = 1;
   /**
    * The distance the robot moves downwards before detecting the y axis, in grid units
    */
@@ -20,7 +25,7 @@ public class LightLocalizer extends Thread {
   public static final int POLL_DELAY = 7;
   
   /**
-   * The time waited before checking that the navigation is done
+   * The time (ms) waited before checking that the navigation is done
    */
   public static final int SLEEP_TIME = 50;
   /**
@@ -35,7 +40,7 @@ public class LightLocalizer extends Thread {
 
 
   /**
-   * default constructor starts a navigation thread for light localizer
+   * Creates a light localizer instance with a navigation thread
    */
   public LightLocalizer() throws OdometerExceptions {
     try {
@@ -50,7 +55,7 @@ public class LightLocalizer extends Thread {
 
   /**
    * Move robot to (0,0) position using nav system
-   * Then, it sets the heading to 0
+   * Then, it turns to North (until the heading is 0deg)
    */
   private void movetoOrigin() {
     nav.travelTo(0, 0);
@@ -64,27 +69,30 @@ public class LightLocalizer extends Thread {
   }
 
   public void run() {
-    // find y
-    nav.turnTo(180);
-    moveToLine(false);
-    odo.setY(0);
+    // find y-axis
+    nav.turnTo(180); //reverse robot
+    moveToLine(false); //move backwards to a line (should be y=0 gridline)
+    odo.setY(SENSOR_OFFSET);
     odo.setX(0);
     
-    nav.travelTo(0, -DOWN_DIST);
+    nav.travelTo(0, -DOWN_DIST); //move down to center of current block
     while (nav.isNavigating()) {
       sleep();
     }
     nav.setSpeeds(0, 0);
-    // find x
+    
+    // find x-axis
     nav.turnTo(270);
-    moveToLine(false);
-    odo.setX(0);
+    moveToLine(false); //move backwards to a line (should be x=0 gridline)
+    odo.setX(SENSOR_OFFSET);
 
+    //both lines have been localized, can now move to origin
+    this.moveForward(SENSOR_OFFSET);
     this.movetoOrigin();
   }
 
   /**
-   * Moves the robot forward until a line is detected
+   * Moves the robot forward or backward until a line is detected
    * 
    * @param forwards True to move forward, false for backward
    */
@@ -98,6 +106,8 @@ public class LightLocalizer extends Thread {
       Lab4.LCD.drawString(sample[0] + ", " + samples.getAvg(),0,4);
       sleep();
     } while (sample[0] > samples.getAvg() - LIGHT_THRESHOLD);
+    
+    Sound.beep(); //found a line
     nav.setSpeeds(0, 0);
   }
 
@@ -111,4 +121,25 @@ public class LightLocalizer extends Thread {
       e.printStackTrace();
     }
   }
+  
+  /**
+   * Moves the robot forward (straight) a certain distance, using the odometer.
+   * 
+   * @param dist
+   */
+  private void moveForward(double dist) {
+    nav.setSpeeds(MOTOR_SPEED,MOTOR_SPEED);
+    double[] start = nav.getOdo().getXYT();
+    Lab4.LEFT_MOTOR.forward();
+    Lab4.RIGHT_MOTOR.forward();
+    while (Navigation.dist(nav.getOdo().getXYT(), start) < dist) {
+      try {
+        sleep(30);
+      } catch (InterruptedException e) {
+      }
+    }
+    nav.setSpeeds(0, 0);
+  }
+ 
 }
+
