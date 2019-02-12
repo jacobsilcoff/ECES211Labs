@@ -4,7 +4,7 @@ import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 
 /*
- * A class used to navigate the robot
+ * A class used to navigate the robot to specified points
  */
 public class Navigation extends Thread {
   /**
@@ -153,7 +153,6 @@ public class Navigation extends Thread {
   @Override
   public void run() {
     State state = State.INIT;
-    ObstacleAvoidance avoidance = new ObstacleAvoidance(this);
     while (on) {
       switch (state) {
         case INIT:

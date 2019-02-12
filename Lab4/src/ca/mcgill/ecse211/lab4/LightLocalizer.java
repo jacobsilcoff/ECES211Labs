@@ -4,6 +4,15 @@ import lejos.hardware.Sound;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 
+/**
+ * This class represents a routine used by the robot
+ * to find the x and y axis of the grid system it is on.
+ * 
+ * It uses a light sensor to detect these lines, assuming an 
+ * accurate theta value stored in the odometer. 
+ * @author jacob
+ *
+ */
 public class LightLocalizer extends Thread {
 
   /**
@@ -41,6 +50,7 @@ public class LightLocalizer extends Thread {
 
   /**
    * Creates a light localizer instance with a navigation thread
+   * @throws OdometerExceptions if there are problems creating the odometer
    */
   public LightLocalizer() throws OdometerExceptions {
     try {
@@ -67,24 +77,32 @@ public class LightLocalizer extends Thread {
     }
     nav.turnTo(0);
   }
-
+  
+  /**
+   * Starts the thread.
+   * When executed, the robot will turn to 270deg, and 
+   * move backwards until the y axis is detected.
+   * Then, it will move back to the center of the tile, and
+   * turn 90deg down to face 180deg, moving backwards until the
+   * x axis is detected. The robot will then navigate to the origin.
+   */
   public void run() {
     // find y-axis
-    nav.turnTo(180); //reverse robot
-    moveToLine(false); //move backwards to a line (should be y=0 gridline)
-    odo.setY(SENSOR_OFFSET);
-    odo.setX(0);
+    nav.turnTo(270); //reverse robot
+    moveToLine(false); //move backwards to a line (should be x=0 gridline)
+    odo.setX(SENSOR_OFFSET);
+    odo.setY(0);
     
-    nav.travelTo(0, -DOWN_DIST); //move down to center of current block
+    nav.travelTo(-DOWN_DIST,0); //move down to center of current block
     while (nav.isNavigating()) {
       sleep();
     }
     nav.setSpeeds(0, 0);
     
     // find x-axis
-    nav.turnTo(270);
-    moveToLine(false); //move backwards to a line (should be x=0 gridline)
-    odo.setX(SENSOR_OFFSET);
+    nav.turnTo(180);
+    moveToLine(false); //move backwards to a line (should be y=0 gridline)
+    odo.setY(SENSOR_OFFSET);
 
     //both lines have been localized, can now move to origin
     this.moveForward(SENSOR_OFFSET);

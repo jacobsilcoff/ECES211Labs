@@ -4,6 +4,13 @@ import lejos.hardware.Sound;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 
+/**
+ * This class represents a routine used by the robot
+ * to calibrate the theta value of the odometer, using
+ * the ultrasonic sensor.
+ * @author jacob silcoff & helen lin
+ *
+ */
 public class UltrasonicLocalizer extends Thread {
 
   /**
@@ -13,15 +20,23 @@ public class UltrasonicLocalizer extends Thread {
   /**
    * The distance (cm) below which the robot assumes it is looking at the wall
    */
-  public static final double DETECTION_DISTANCE = 30.48;
+  public static final double DETECTION_DISTANCE = 25;
   /**
    * The motor speed (deg/s) used by the robot when turning
    */
   private static final int ROTATE_SPEED = 80;
   /**
+   * The motor speed (deg/s) used by the robot when minimizing distance
+   */
+  private static final int MIN_SPEED = 30;
+  /**
    * The error threshold (cm) for finding falling or rising edge angles
    */
   private static final double ERROR_THRESH = 2;
+  /**
+   * The number of readings in a row to be considered valid
+   */
+  private static final int POLL_COUNT = 60;//was 30 as good filter
 
 
   private Odometer odo;
@@ -85,16 +100,21 @@ public class UltrasonicLocalizer extends Thread {
     Lab4.LCD.drawString("Edge detected", 0, 4);
     Sound.beep(); //audio notification
     
- //   double lastReading = readUS();
+    double lastReading = readUS();
     //if rising edge, turn other direction
     //tries to minimize value (ie, face perpendicular to wall)
-//    dir = rising? -dir:dir;
-//
-//    nav.setSpeeds(dir * MIN_SPEED, - dir * MIN_SPEED);
-//    while (lastReading >= (reading=readUS(true))) {
-//      lastReading = reading;
-//      sleep();
-//    }
+    dir = rising? -dir:dir;
+    int count = 0;
+    nav.setSpeeds(dir * MIN_SPEED, - dir * MIN_SPEED);
+    while (count < POLL_COUNT) {
+      if (lastReading >= (reading=readUS())) {
+        count++;
+      } else {
+        count = 0;
+      }
+      lastReading = reading;
+      sleep();
+    }
     nav.setSpeeds(0, 0); //stop robot
 
     return odo.getXYT()[2];
